@@ -1,0 +1,28 @@
+﻿@page "/protected"
+@inject HttpClient Http
+@inject NavigationManager Navigation
+
+<h3>Protected Page</h3>
+
+@if (!string.IsNullOrEmpty(Message))
+{
+    <p>@Message</p>
+}
+
+@code {
+    private string Message = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        var response = await Http.GetAsync($"{Navigation.BaseUri}api/auth");
+
+        if (response.IsSuccessStatusCode)
+        {
+            Message = await response.Content.ReadAsStringAsync();
+        }
+        else
+        {
+            Navigation.NavigateTo($"{Navigation.BaseUri}login");
+        }
+    }
+}
