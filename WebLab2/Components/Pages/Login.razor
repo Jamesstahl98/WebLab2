@@ -2,6 +2,7 @@
 @using WebLab2.Models
 @inject HttpClient Http
 @inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
 
 <h3>Login</h3>
 
@@ -33,11 +34,46 @@
 
         if (response.IsSuccessStatusCode)
         {
+            var cookies = response.Headers.GetValues("Set-Cookie");
+
+            var accessTokenCookie = cookies.FirstOrDefault(c => c.Contains("AccessToken"));
+
+            var refreshTokenCookie = cookies.FirstOrDefault(c => c.Contains("RefreshToken"));
+            
+            var accessToken = ExtractTokenValue(accessTokenCookie);
+            var refreshToken = ExtractTokenValue(refreshTokenCookie);
+
+            if (!string.IsNullOrEmpty(accessTokenCookie))
+            {
+                await JSRuntime.InvokeVoidAsync("setCookie", "AccessToken", accessToken);
+            }
+
+            if (!string.IsNullOrEmpty(refreshTokenCookie))
+            {
+                await JSRuntime.InvokeVoidAsync("setCookie", "RefreshToken", refreshToken);
+            }
+
             Navigation.NavigateTo("/");
         }
         else
         {
             ErrorMessage = "Invalid credentials.";
         }
+    }
+    private string ExtractTokenValue(string cookie)
+    {
+        if (string.IsNullOrEmpty(cookie))
+            return null;
+
+        var parts = cookie.Split(';');
+        var tokenPart = parts.FirstOrDefault(c => c.Contains("AccessToken"));
+
+        if (tokenPart != null)
+        {
+            var tokenValue = tokenPart.Split('=')[1];
+            return tokenValue.Trim();
+        }
+
+        return null;
     }
 }

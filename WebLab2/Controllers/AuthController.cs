@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -41,7 +42,7 @@ public class AuthController(IAuthService authService) : ControllerBase
         {
             HttpOnly = true,
             Secure = true,
-            SameSite = SameSiteMode.Strict,
+            SameSite = SameSiteMode.None,
             Expires = DateTime.UtcNow.AddHours(1)
         });
 
@@ -49,7 +50,7 @@ public class AuthController(IAuthService authService) : ControllerBase
         {
             HttpOnly = true,
             Secure = true,
-            SameSite = SameSiteMode.Strict,
+            SameSite = SameSiteMode.None,
             Expires = response.RefreshTokenExpiration
         });
 
@@ -59,37 +60,36 @@ public class AuthController(IAuthService authService) : ControllerBase
     [HttpPost("logout")]
     public IActionResult Logout()
     {
-        Response.Cookies.Delete("access_token");
-        Response.Cookies.Delete("refresh_token");
+        Response.Cookies.Delete("AccessToken");
+        Response.Cookies.Delete("RefreshToken");
         return Ok();
     }
 
     [HttpPost("refresh-token")]
     public async Task<IActionResult> RefreshToken()
     {
-        var refreshToken = Request.Cookies["refresh_token"];
+        var refreshToken = Request.Cookies["RefreshToken"];
         if (string.IsNullOrEmpty(refreshToken))
         {
             return Unauthorized("Refresh token missing");
         }
 
+        refreshToken = Uri.UnescapeDataString(refreshToken);
+
         var userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "");
-        var response = await authService.RefreshTokensAsync(new RefreshTokenRequestDto { UserId = userId, RefreshToken = refreshToken });
+
+        var response = await authService.RefreshTokensAsync(new RefreshTokenRequestDto
+        {
+            UserId = userId,
+            RefreshToken = refreshToken
+        });
 
         if (response is null)
         {
             return Unauthorized("Invalid refresh token");
         }
 
-        Response.Cookies.Append("access_token", response.AccessToken, new CookieOptions
-        {
-            HttpOnly = true,
-            Secure = true,
-            SameSite = SameSiteMode.Strict,
-            Expires = DateTime.UtcNow.AddDays(1)
-        });
-
-        return Ok();
+        return Ok(new { message = "Token refreshed" });
     }
 
     [Authorize]

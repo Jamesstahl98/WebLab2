@@ -13,16 +13,17 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddHttpClient("ApiClient", client =>
 {
     client.BaseAddress = new Uri("https://localhost:7144");
+    client.DefaultRequestHeaders.Add("credentials", "include");
 });
 
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll", policy =>
-    {
-        policy.AllowAnyOrigin()
-              .AllowAnyHeader()
-              .AllowAnyMethod();
-    });
+    options.AddPolicy("AllowAll",
+        builder => builder
+            .WithOrigins("https://localhost:7144", "http://localhost:5062")
+            .AllowCredentials()
+            .AllowAnyHeader()
+            .AllowAnyMethod());
 });
 
 // Add MudBlazor services
@@ -40,6 +41,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
+        options.SaveToken = true;
+        options.RequireHttpsMetadata = false;
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
@@ -55,6 +58,7 @@ builder.Services.ConfigureApplicationCookie(options =>
 {
     options.Cookie.HttpOnly = true;
     options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+    options.Cookie.SameSite = SameSiteMode.None;
 });
 
 builder.Services.AddScoped<IAuthService, AuthService>();
@@ -73,14 +77,20 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseRouting();
+app.UseCors("AllowAll");
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseAntiforgery();
-app.MapControllers();
 
-app.UseAntiforgery();
+app.UseEndpoints(endpoints =>
+{
+    endpoints.MapControllers();
+});
 
+app.UseStaticFiles();
 app.MapStaticAssets();
+
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 

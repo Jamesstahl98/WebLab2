@@ -1,12 +1,14 @@
 ﻿@page "/protected"
 @inject HttpClient Http
 @inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
 
 <h3>Protected Page</h3>
 
 @if (!string.IsNullOrEmpty(Message))
 {
     <p>@Message</p>
+
 }
 
 @code {
@@ -14,7 +16,17 @@
 
     protected override async Task OnInitializedAsync()
     {
-        var response = await Http.GetAsync($"{Navigation.BaseUri}api/auth");
+        var token = await GetAccessTokenAsync();
+
+        if (string.IsNullOrEmpty(token))
+        {
+            Navigation.NavigateTo("/login");
+            return;
+        }
+
+        Http.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+        var response = await Http.GetAsync($"{Navigation.BaseUri}api/auth/admin-only");
 
         if (response.IsSuccessStatusCode)
         {
@@ -22,7 +34,12 @@
         }
         else
         {
-            Navigation.NavigateTo($"{Navigation.BaseUri}login");
+            Navigation.NavigateTo("/login");
         }
+    }
+    private async Task<string?> GetAccessTokenAsync()
+    {
+        var token = await JSRuntime.InvokeAsync<string>("getCookie", "AccessToken");
+        return token;
     }
 }

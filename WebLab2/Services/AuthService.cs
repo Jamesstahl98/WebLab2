@@ -73,7 +73,7 @@ public class AuthService(AppDbContext context, IConfiguration configuration) : I
         var key = new SymmetricSecurityKey(
             Encoding.UTF8.GetBytes(configuration.GetValue<string>("AppSettings:Token")));
 
-        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha512);
+        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
         var tokenDescriptor = new JwtSecurityToken(
             issuer: configuration.GetValue<string>("AppSettings:Issuer"),
