@@ -36,21 +36,16 @@
         {
             var cookies = response.Headers.GetValues("Set-Cookie");
 
-            var accessTokenCookie = cookies.FirstOrDefault(c => c.Contains("AccessToken"));
-
-            var refreshTokenCookie = cookies.FirstOrDefault(c => c.Contains("RefreshToken"));
-            
-            var accessToken = ExtractTokenValue(accessTokenCookie);
-            var refreshToken = ExtractTokenValue(refreshTokenCookie);
-
-            if (!string.IsNullOrEmpty(accessTokenCookie))
+            foreach(var cookie in cookies)
             {
-                await JSRuntime.InvokeVoidAsync("setCookie", "AccessToken", accessToken);
-            }
-
-            if (!string.IsNullOrEmpty(refreshTokenCookie))
-            {
-                await JSRuntime.InvokeVoidAsync("setCookie", "RefreshToken", refreshToken);
+                if (cookie.StartsWith("AccessToken"))
+                {
+                    await JSRuntime.InvokeVoidAsync("setCookie", "AccessToken", ExtractTokenValue(cookie));
+                }
+                else if(cookie.StartsWith("RefreshToken"))
+                {
+                    await JSRuntime.InvokeVoidAsync("setCookie", "RefreshToken", ExtractTokenValue(cookie));
+                }
             }
 
             Navigation.NavigateTo("/");
@@ -62,15 +57,9 @@
     }
     private string ExtractTokenValue(string cookie)
     {
-        if (string.IsNullOrEmpty(cookie))
-            return null;
-
-        var parts = cookie.Split(';');
-        var tokenPart = parts.FirstOrDefault(c => c.Contains("AccessToken"));
-
-        if (tokenPart != null)
+        if (cookie != null)
         {
-            var tokenValue = tokenPart.Split('=')[1];
+            var tokenValue = cookie.Split('=')[1];
             return tokenValue.Trim();
         }
 
