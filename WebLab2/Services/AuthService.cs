@@ -12,11 +12,14 @@ using WebLab2.Models;
 
 namespace WebLab2.Services;
 
-public class AuthService(AppDbContext context, IConfiguration configuration) : IAuthService
+public class AuthService(IUnitOfWork unitOfWork, IConfiguration configuration) : IAuthService
 {
+    private readonly IUnitOfWork _unitOfWork = unitOfWork;
+    private readonly IConfiguration _configuration = configuration;
+
     public async Task<TokenResponseDto?> LoginAsync(UserDto request)
     {
-        var user = await context.Users.FirstOrDefaultAsync(u => u.Username == request.Username);
+        var user = await _unitOfWork.Users.GetByUsernameAsync(request.Username);
         if (user is null)
         {
             return null;
@@ -32,6 +35,25 @@ public class AuthService(AppDbContext context, IConfiguration configuration) : I
         return await CreateTokenResponseAsync(user);
     }
 
+    public async Task<User?> RegisterAsync(UserDto request)
+    {
+        if (await _unitOfWork.Users.UsernameExistsAsync(request.Username))
+        {
+            return null;
+        }
+
+        var user = new User();
+        var hashedPassword = new PasswordHasher<User>().HashPassword(user, request.Password);
+
+        user.Username = request.Username;
+        user.PasswordHash = hashedPassword;
+
+        await _unitOfWork.Users.AddAsync(user);
+        await _unitOfWork.SaveChangesAsync();
+
+        return user;
+    }
+
     private async Task<TokenResponseDto> CreateTokenResponseAsync(User user)
     {
         return new TokenResponseDto
@@ -39,26 +61,6 @@ public class AuthService(AppDbContext context, IConfiguration configuration) : I
             AccessToken = GenerateToken(user),
             RefreshToken = await GenerateAndRefreshTokenAsync(user)
         };
-    }
-
-    public async Task<User?> RegisterAsync(UserDto request)
-    {
-        if(await context.Users.AnyAsync(u => u.Username == request.Username))
-        {
-            return null;
-        }
-
-        var user = new User();
-        var hashedPassword = new PasswordHasher<User>()
-            .HashPassword(user, request.Password);
-
-        user.Username = request.Username;
-        user.PasswordHash = hashedPassword;
-
-        context.Users.Add(user);
-        await context.SaveChangesAsync();
-
-        return user;
     }
 
     private string GenerateToken(User user)
@@ -71,15 +73,16 @@ public class AuthService(AppDbContext context, IConfiguration configuration) : I
         };
 
         var key = new SymmetricSecurityKey(
-            Encoding.UTF8.GetBytes(configuration.GetValue<string>("AppSettings:Token")));
+            Encoding.UTF8.GetBytes(_configuration.GetValue<string>("AppSettings:Token"))
+        );
 
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
         var tokenDescriptor = new JwtSecurityToken(
-            issuer: configuration.GetValue<string>("AppSettings:Issuer"),
-            audience: configuration.GetValue<string>("AppSettings:Audience"),
+            issuer: _configuration.GetValue<string>("AppSettings:Issuer"),
+            audience: _configuration.GetValue<string>("AppSettings:Audience"),
             claims: claims,
-            expires: DateTime.Now.AddDays(1),
+            expires: DateTime.UtcNow.AddDays(1),
             signingCredentials: creds
         );
 
@@ -98,14 +101,15 @@ public class AuthService(AppDbContext context, IConfiguration configuration) : I
     {
         var refreshToken = GenerateRefreshToken();
         user.RefreshToken = refreshToken;
-        user.RefreshTokenExpiration = DateTime.Now.AddDays(7);
-        await context.SaveChangesAsync();
+        user.RefreshTokenExpiration = DateTime.UtcNow.AddDays(7);
+
+        await _unitOfWork.SaveChangesAsync();
         return refreshToken;
     }
 
     private async Task<User?> ValidateRefreshTokenAsync(Guid userId, string refreshToken)
     {
-        var user = await context.Users.FindAsync(userId);
+        var user = await _unitOfWork.Users.GetByIdAsync(userId);
         if (user is null
             || user.RefreshToken != refreshToken
             || user.RefreshTokenExpiration < DateTime.UtcNow)
@@ -118,7 +122,7 @@ public class AuthService(AppDbContext context, IConfiguration configuration) : I
     public async Task<TokenResponseDto?> RefreshTokensAsync(RefreshTokenRequestDto request)
     {
         var user = await ValidateRefreshTokenAsync(request.UserId, request.RefreshToken);
-        if(user is null)
+        if (user is null)
         {
             return null;
         }
