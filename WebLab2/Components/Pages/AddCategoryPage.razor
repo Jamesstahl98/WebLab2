@@ -1,0 +1,50 @@
+﻿@page "/add-category"
+@inject HttpClient Http
+@inject NavigationManager Navigation
+@using System.Net.Http.Json
+@using WebLab2.Models
+
+<PageTitle>Add Category</PageTitle>
+
+<MudTextField @bind-Value="newCategory.Name" Label="Category Name" Required="true" />
+<MudButton Color="Color.Primary" OnClick="AddCategory">Add Category</MudButton>
+
+@if (isSuccess)
+{
+    <MudAlert Severity="Severity.Success">Category added.</MudAlert>
+}
+@if (isError)
+{
+    <MudAlert Severity="Severity.Error">Failed to add Category.</MudAlert>
+}
+
+@code {
+    private CategoryDto newCategory = new CategoryDto();
+    private bool isSuccess = false;
+    private bool isError = false;
+
+    private async Task AddCategory()
+    {
+        try
+        {
+            var response = await Http.PostAsJsonAsync($"{Navigation.BaseUri}api/categories", newCategory);
+
+            if (response.IsSuccessStatusCode)
+            {
+                isSuccess = true;
+                isError = false;
+                newCategory = new CategoryDto();
+            }
+            else
+            {
+                isError = true;
+                isSuccess = false;
+            }
+        }
+        catch (Exception)
+        {
+            isError = true;
+            isSuccess = false;
+        }
+    }
+}

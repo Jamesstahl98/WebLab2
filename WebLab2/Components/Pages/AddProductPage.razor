@@ -1,0 +1,81 @@
+﻿@page "/add-product"
+@using WebLab2.Models
+@using static WebLab2.Enums.ProductStatusEnum
+@inject HttpClient Http
+@inject NavigationManager Navigation
+
+<PageTitle>Add Product</PageTitle>
+
+<MudPaper Class="pa-4">
+    <MudTextField @bind-Value="newProduct.Name" Label="Product Name" Required="true" />
+    <MudTextField @bind-Value="newProduct.Description" Label="Description" Required="true" />
+    <MudTextField @bind-Value="newProduct.Price" Label="Price" Type="number" Required="true" />
+
+    <MudSelect @bind-Value="selectedCategoryId" Label="Category" Required="true">
+        @foreach (var category in categories)
+        {
+            <MudSelectItem Value="@category.Id">@category.Name</MudSelectItem>
+        }
+    </MudSelect>
+
+    <MudSelect @bind-Value="selectedStatus" Label="Status" Required="true">
+        @foreach (var status in Enum.GetValues<ProductStatus>())
+        {
+            <MudSelectItem Value="@status">@status.ToString()</MudSelectItem>
+        }
+    </MudSelect>
+
+    <MudButton Color="Color.Primary" OnClick="AddProduct">Add Product</MudButton>
+
+    @if (isSuccess)
+    {
+        <MudAlert Severity="Severity.Success">Product added successfully!</MudAlert>
+    }
+    @if (isError)
+    {
+        <MudAlert Severity="Severity.Error">Failed to add product.</MudAlert>
+    }
+</MudPaper>
+
+@code {
+    private ProductDto newProduct = new ProductDto();
+    private List<CategoryDto> categories = new List<CategoryDto>();
+    private ProductStatus selectedStatus;
+    private int selectedCategoryId;
+    private bool isSuccess = false;
+    private bool isError = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        categories = await Http.GetFromJsonAsync<List<CategoryDto>>($"{Navigation.BaseUri}api/categories");
+    }
+
+    private async Task AddProduct()
+    {
+        try
+        {
+            newProduct.Status = selectedStatus;
+            newProduct.CategoryId = selectedCategoryId;
+            var response = await Http.PostAsJsonAsync($"{Navigation.BaseUri}api/products", newProduct);
+
+            if (response.IsSuccessStatusCode)
+            {
+                isSuccess = true;
+                isError = false;
+                newProduct = new ProductDto();
+                selectedCategoryId = 0;
+                selectedStatus = ProductStatus.Available;
+            }
+            else
+            {
+                isError = true;
+                isSuccess = false;
+            }
+        }
+        catch (Exception)
+        {
+            isError = true;
+            isSuccess = false;
+        }
+    }
+}
