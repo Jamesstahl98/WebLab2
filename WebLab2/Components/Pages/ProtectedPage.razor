@@ -1,4 +1,5 @@
 ﻿@page "/protected"
+@using WebLab2.HelperMethods
 @inject HttpClient Http
 @inject NavigationManager Navigation
 @inject IJSRuntime JSRuntime
@@ -12,34 +13,21 @@
 }
 
 @code {
+    [Inject] private AuthHelper AuthHelper { get; set; }
+    private bool isAdmin;
+
     private string Message = "";
 
     protected override async Task OnInitializedAsync()
     {
-        var token = await GetAccessTokenAsync();
-
-        if (string.IsNullOrEmpty(token))
+        isAdmin = await AuthHelper.IsUserAdminAsync();
+        if (isAdmin)
         {
-            Navigation.NavigateTo("/login");
-            return;
-        }
-
-        Http.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
-
-        var response = await Http.GetAsync($"{Navigation.BaseUri}api/auth/admin-only");
-
-        if (response.IsSuccessStatusCode)
-        {
-            Message = await response.Content.ReadAsStringAsync();
+            Message = "Welcome, Admin!";
         }
         else
         {
             Navigation.NavigateTo("/login");
         }
-    }
-    private async Task<string?> GetAccessTokenAsync()
-    {
-        var token = await JSRuntime.InvokeAsync<string>("getCookie", "AccessToken");
-        return token;
     }
 }

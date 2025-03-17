@@ -1,0 +1,32 @@
+﻿@page "/products"
+@using WebLab2.Models
+@inject HttpClient Http
+@inject NavigationManager Navigation
+
+<PageTitle>Products</PageTitle>
+
+<MudTable Items="@products" Striped="true" Hover="true">
+    <HeaderContent>
+        <MudTh>Product Name</MudTh>
+        <MudTh>Price</MudTh>
+        <MudTh>Status</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Product Name">@context.Name</MudTd>
+        <MudTd DataLabel="Price">@context.Price.ToString("C")</MudTd>
+        <MudTd DataLabel="Price">@context.Status.ToString()</MudTd>
+    </RowTemplate>
+</MudTable>
+
+@code {
+    private List<ProductDto> products = new List<ProductDto>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var response = await Http.GetFromJsonAsync<List<ProductDto>>($"{Navigation.BaseUri}api/products");
+        if (response != null)
+        {
+            products = response;
+        }
+    }
+}
