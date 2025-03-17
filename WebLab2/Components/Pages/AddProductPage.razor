@@ -1,4 +1,5 @@
 ﻿@page "/add-product"
+@using WebLab2.HelperMethods
 @using WebLab2.Models
 @using static WebLab2.Enums.ProductStatusEnum
 @inject HttpClient Http
@@ -7,37 +8,47 @@
 <PageTitle>Add Product</PageTitle>
 
 <MudPaper Class="pa-4">
-    <MudTextField @bind-Value="newProduct.Name" Label="Product Name" Required="true" />
-    <MudTextField @bind-Value="newProduct.Description" Label="Description" Required="true" />
-    <MudTextField @bind-Value="newProduct.Price" Label="Price" Type="number" Required="true" />
-
-    <MudSelect @bind-Value="selectedCategoryId" Label="Category" Required="true">
-        @foreach (var category in categories)
-        {
-            <MudSelectItem Value="@category.Id">@category.Name</MudSelectItem>
-        }
-    </MudSelect>
-
-    <MudSelect @bind-Value="selectedStatus" Label="Status" Required="true">
-        @foreach (var status in Enum.GetValues<ProductStatus>())
-        {
-            <MudSelectItem Value="@status">@status.ToString()</MudSelectItem>
-        }
-    </MudSelect>
-
-    <MudButton Color="Color.Primary" OnClick="AddProduct">Add Product</MudButton>
-
-    @if (isSuccess)
+    @if(isAdmin)
     {
-        <MudAlert Severity="Severity.Success">Product added successfully!</MudAlert>
+        <MudTextField @bind-Value="newProduct.Name" Label="Product Name" Required="true" />
+        <MudTextField @bind-Value="newProduct.Description" Label="Description" Required="true" />
+        <MudTextField @bind-Value="newProduct.Price" Label="Price" Type="number" Required="true" />
+
+        <MudSelect @bind-Value="selectedCategoryId" Label="Category" Required="true">
+            @foreach (var category in categories)
+            {
+                <MudSelectItem Value="@category.Id">@category.Name</MudSelectItem>
+            }
+        </MudSelect>
+
+        <MudSelect @bind-Value="selectedStatus" Label="Status" Required="true">
+            @foreach (var status in Enum.GetValues<ProductStatus>())
+            {
+                <MudSelectItem Value="@status">@status.ToString()</MudSelectItem>
+            }
+        </MudSelect>
+
+        <MudButton Color="Color.Primary" OnClick="AddProduct">Add Product</MudButton>
+
+        @if (isSuccess)
+        {
+            <MudAlert Severity="Severity.Success">Product added successfully!</MudAlert>
+        }
+        @if (isError)
+        {
+            <MudAlert Severity="Severity.Error">Failed to add product.</MudAlert>
+        }
     }
-    @if (isError)
+    else
     {
-        <MudAlert Severity="Severity.Error">Failed to add product.</MudAlert>
+        <a href="/login">Login as an admin to add products.</a>
     }
 </MudPaper>
 
 @code {
+    [Inject] private AuthHelper AuthHelper { get; set; }
+    private bool isAdmin;
+
     private ProductDto newProduct = new ProductDto();
     private List<CategoryDto> categories = new List<CategoryDto>();
     private ProductStatus selectedStatus;
@@ -47,7 +58,12 @@
 
     protected override async Task OnInitializedAsync()
     {
-        categories = await Http.GetFromJsonAsync<List<CategoryDto>>($"{Navigation.BaseUri}api/categories");
+        isAdmin = await AuthHelper.IsUserAdminAsync();
+        //Not sure if this is unsafe
+        if (isAdmin)
+        {
+            categories = await Http.GetFromJsonAsync<List<CategoryDto>>($"{Navigation.BaseUri}api/categories");
+        }
     }
 
     private async Task AddProduct()
