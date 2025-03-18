@@ -1,45 +1,53 @@
-﻿@inject HttpClient Http
-@inject NavigationManager Navigation
-@inject AuthHelper AuthHelper
+﻿@using MudBlazor
+@using WebLab2.Components.Pages
 @using WebLab2.HelperMethods
 @using WebLab2.Models
-@using MudBlazor
+@inject HttpClient Http
+@inject NavigationManager Navigation
 
 <MudDialog>
-    <TitleContent>Delete Product</TitleContent>
+
+    <TitleContent>Edit Category</TitleContent>
     <DialogContent>
-        <MudText>Are you sure you want to delete the product "@product.Name"?</MudText>
+        <MudTextField @bind-Value="category.Name" Label="Product Name" Required="true" />
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="Cancel" Color="Color.Secondary">Cancel</MudButton>
-        <MudButton Color="Color.Error" OnClick="DeleteProduct">Delete</MudButton>
+        <MudButton Color="Color.Secondary" OnClick="@(() => SaveCategory(category.Id))">
+            Edit
+        </MudButton>
     </DialogActions>
-</MudDialog>
 
+</MudDialog>
 @if (isSuccess)
 {
-    <MudAlert Severity="Severity.Success">Product successfully deleted!</MudAlert>
+    <MudAlert Severity="Severity.Success">Category successfully edited!</MudAlert>
 }
 @if (isError)
 {
-    <MudAlert Severity="Severity.Error">Failed to delete product.</MudAlert>
+    <MudAlert Severity="Severity.Error">Failed to edit category.</MudAlert>
 }
 
 @code {
+    [Inject] private AuthHelper AuthHelper { get; set; }
     private bool isSuccess;
     private bool isError;
 
     [CascadingParameter] private IMudDialogInstance MudDialog { get; set; }
-    [Parameter] public ProductDto product { get; set; }
+    [Parameter] public CategoryDto category { get; set; }
+    [Parameter] public List<CategoryDto> categories { get; set; }
 
-    private async Task DeleteProduct()
+    private async Task SaveCategory(int id)
     {
         try
         {
             var token = await AuthHelper.GetAccessTokenAsync();
             if (!string.IsNullOrEmpty(token))
             {
-                var requestMessage = new HttpRequestMessage(HttpMethod.Delete, $"{Navigation.BaseUri}api/products/{product.Id}");
+                var requestMessage = new HttpRequestMessage(HttpMethod.Put, $"{Navigation.BaseUri}api/categories/{id}")
+                    {
+                        Content = JsonContent.Create(category)
+                    };
                 requestMessage.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
                 var response = await Http.SendAsync(requestMessage);
@@ -69,6 +77,7 @@
             isError = true;
             isSuccess = false;
         }
+
     }
 
     private void Cancel()

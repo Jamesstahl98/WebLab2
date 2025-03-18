@@ -6,23 +6,24 @@
 @using MudBlazor
 
 <MudDialog>
-    <TitleContent>Delete Product</TitleContent>
+    <TitleContent>Delete Category</TitleContent>
     <DialogContent>
-        <MudText>Are you sure you want to delete the product "@product.Name"?</MudText>
+        <MudText>Are you sure you want to delete the category "@category.Name"?<br />
+            This will delete all products in the category.</MudText>
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="Cancel" Color="Color.Secondary">Cancel</MudButton>
-        <MudButton Color="Color.Error" OnClick="DeleteProduct">Delete</MudButton>
+        <MudButton Color="Color.Error" OnClick="DeleteCategory">Delete</MudButton>
     </DialogActions>
 </MudDialog>
 
 @if (isSuccess)
 {
-    <MudAlert Severity="Severity.Success">Product successfully deleted!</MudAlert>
+    <MudAlert Severity="Severity.Success">Category successfully deleted!</MudAlert>
 }
 @if (isError)
 {
-    <MudAlert Severity="Severity.Error">Failed to delete product.</MudAlert>
+    <MudAlert Severity="Severity.Error">Failed to delete category.</MudAlert>
 }
 
 @code {
@@ -30,16 +31,16 @@
     private bool isError;
 
     [CascadingParameter] private IMudDialogInstance MudDialog { get; set; }
-    [Parameter] public ProductDto product { get; set; }
+    [Parameter] public CategoryDto category { get; set; }
 
-    private async Task DeleteProduct()
+    private async Task DeleteCategory()
     {
         try
         {
             var token = await AuthHelper.GetAccessTokenAsync();
             if (!string.IsNullOrEmpty(token))
             {
-                var requestMessage = new HttpRequestMessage(HttpMethod.Delete, $"{Navigation.BaseUri}api/products/{product.Id}");
+                var requestMessage = new HttpRequestMessage(HttpMethod.Delete, $"{Navigation.BaseUri}api/categories/{category.Id}");
                 requestMessage.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
                 var response = await Http.SendAsync(requestMessage);

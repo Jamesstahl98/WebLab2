@@ -13,6 +13,8 @@
 <MudPaper Class="pa-4">
     @if(isAdmin)
     {
+        //PRODUCT LIST
+        <MudCardHeader>Products</MudCardHeader>
         <MudTable Items="@products" Striped="true" Hover="true">
             <HeaderContent>
                 <MudTh>Product Name</MudTh>
@@ -31,12 +33,29 @@
                 <MudButton Color="Color.Secondary" OnClick="@(() => OpenEditProduct(context))">
                     Edit
                 </MudButton>
-                <MudButton Color="Color.Error" OnClick="@(() => ShowDeleteDialog(context))">
+                <MudButton Color="Color.Error" OnClick="@(() => OpenDeleteProductDialog(context))">
                     Delete
                 </MudButton>
             </RowTemplate>
         </MudTable>
         <MudButton Color="Color.Primary" OnClick="OpenAddProductDialog">Add Product</MudButton>
+
+        //CATEGORY LIST
+        <MudCardHeader>Categories</MudCardHeader>
+        <MudTable Items="@categories" Striped="true" Hover="true">
+            <HeaderContent>
+                <MudTh>Category Name</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Category Name">@context.Name</MudTd>
+                <MudButton Color="Color.Secondary" OnClick="@(() => OpenEditCategory(context))">
+                    Edit
+                </MudButton>
+                <MudButton Color="Color.Error" OnClick="@(() => OpenDeleteCategoryDialog(context))">
+                    Delete
+                </MudButton>
+            </RowTemplate>
+        </MudTable>
         <MudButton Color="Color.Primary" OnClick="OpenAddCategoryDialog">Add Category</MudButton>
     }
     else
@@ -102,6 +121,25 @@
             StateHasChanged();
         }
     }
+    private async Task OpenEditCategory(CategoryDto selectedCategory)
+    {
+        var parameters = new DialogParameters
+        {
+            { "category", selectedCategory }
+        };
+        var dialogOptions = new DialogOptions() { MaxWidth = MaxWidth.Small, FullWidth = true };
+
+        var dialog = DialogService.Show<EditCategoryDialog>("Edit Category", parameters, dialogOptions);
+
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            await RefreshCategories();
+            await RefreshProducts();
+            StateHasChanged();
+        }
+    }
 
     private async Task OpenAddProductDialog()
     {
@@ -133,7 +171,7 @@
         }
     }
 
-    private async Task ShowDeleteDialog(ProductDto product)
+    private async Task OpenDeleteProductDialog(ProductDto product)
     {
         var parameters = new DialogParameters
         {
@@ -146,6 +184,23 @@
 
         if (!result.Canceled)
         {
+            await RefreshProducts();
+            StateHasChanged();
+        }
+    }
+
+    private async Task OpenDeleteCategoryDialog(CategoryDto category)
+    {
+        var parameters = new DialogParameters
+        {
+            { "category", category }
+        };
+        var dialogOptions = new DialogOptions() { MaxWidth = MaxWidth.Small, FullWidth = true };
+        var dialog = DialogService.Show<DeleteCategoryDialog>("Delete Category", parameters, dialogOptions);
+        var result = await dialog.Result;
+        if (!result.Canceled)
+        {
+            await RefreshCategories();
             await RefreshProducts();
             StateHasChanged();
         }
