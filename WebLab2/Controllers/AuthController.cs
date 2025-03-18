@@ -1,13 +1,7 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
+using Microsoft.JSInterop;
 using System.Security.Claims;
-using System.Text;
-using System.Threading.Tasks;
 using WebLab2.Entities;
 using WebLab2.Models;
 using WebLab2.Services;
@@ -16,7 +10,7 @@ namespace WebLab2.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class AuthController(IAuthService authService) : ControllerBase
+public class AuthController(IAuthService authService, IJSRuntime jSRuntime) : ControllerBase
 {
     [HttpPost("register")]
     public async Task<ActionResult<User>> Register(UserDto request)
@@ -60,6 +54,7 @@ public class AuthController(IAuthService authService) : ControllerBase
     [HttpPost("logout")]
     public IActionResult Logout()
     {
+        //Does not work. Cookies are deleted in frontend for now.
         Response.Cookies.Delete("AccessToken");
         Response.Cookies.Delete("RefreshToken");
         return Ok();
