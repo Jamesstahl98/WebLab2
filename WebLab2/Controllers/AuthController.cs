@@ -15,7 +15,7 @@ public class AuthController(IAuthService authService, IJSRuntime jSRuntime) : Co
     [HttpPost("register")]
     public async Task<ActionResult<User>> Register(UserDto request)
     {
-        var user = authService.RegisterAsync(request);
+        var user = await authService.RegisterAsync(request);
         if (user is null)
         {
             return BadRequest("Username already exists");
