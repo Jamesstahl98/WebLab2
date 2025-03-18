@@ -1,45 +1,38 @@
-﻿@page "/add-category"
+﻿@using MudBlazor
+@using WebLab2.Models
+@using WebLab2.HelperMethods
 @inject HttpClient Http
 @inject NavigationManager Navigation
-@using System.Net.Http.Json
-@using WebLab2.HelperMethods
-@using WebLab2.Models
+@inject AuthHelper AuthHelper
 
-<PageTitle>Add Category</PageTitle>
-@if(isAdmin)
+<MudDialog>
+    <TitleContent>Add New Category</TitleContent>
+    <DialogContent>
+        <MudTextField @bind-Value="newCategory.Name" Label="Category Name" Required="true" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel" Color="Color.Secondary">Cancel</MudButton>
+        <MudButton Color="Color.Primary" OnClick="SaveCategory">Add Category</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@if (isSuccess)
 {
-    <MudTextField @bind-Value="newCategory.Name" Label="Category Name" Required="true" />
-    <MudButton Color="Color.Primary" OnClick="AddCategory">Add Category</MudButton>
-
-    @if (isSuccess)
-    {
-        <MudAlert Severity="Severity.Success">Category added.</MudAlert>
-    }
-    @if (isError)
-    {
-        <MudAlert Severity="Severity.Error">Failed to add Category.</MudAlert>
-    }
+    <MudAlert Severity="Severity.Success">Category successfully added!</MudAlert>
 }
-else
+@if (isError)
 {
-    <a href="/login">Login as an admin to add categories.</a>
+    <MudAlert Severity="Severity.Error">Failed to add category.</MudAlert>
 }
 
 @code {
-    [Inject] private AuthHelper AuthHelper { get; set; }
-    private bool isAdmin;
-
     private CategoryDto newCategory = new CategoryDto();
-    private bool isSuccess = false;
-    private bool isError = false;
+    private bool isSuccess;
+    private bool isError;
 
-    protected override async Task OnInitializedAsync()
-    {
-        //Not sure if this is unsafe
-        isAdmin = await AuthHelper.IsUserAdminAsync();
-    }
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; }
 
-    private async Task AddCategory()
+    private async Task SaveCategory()
     {
         try
         {
@@ -59,6 +52,9 @@ else
                     isSuccess = true;
                     isError = false;
                     newCategory = new CategoryDto();
+                    StateHasChanged();
+                    await Task.Delay(1000);
+                    MudDialog.Close(DialogResult.Ok(true));
                 }
                 else
                 {
@@ -77,5 +73,10 @@ else
             isError = true;
             isSuccess = false;
         }
+    }
+
+    private void Cancel()
+    {
+        MudDialog.Close(DialogResult.Cancel());
     }
 }

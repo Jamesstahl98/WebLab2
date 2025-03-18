@@ -1,84 +1,80 @@
-﻿@page "/add-product"
-@using WebLab2.HelperMethods
+﻿@using MudBlazor
 @using WebLab2.Models
+@using WebLab2.HelperMethods
 @using static WebLab2.Enums.ProductStatusEnum
 @inject HttpClient Http
 @inject NavigationManager Navigation
+@inject AuthHelper AuthHelper
 
-<PageTitle>Add Product</PageTitle>
-
-<MudPaper Class="pa-4">
-    @if(isAdmin)
-    {
+<MudDialog>
+    <TitleContent>Add New Product</TitleContent>
+    <DialogContent>
         <MudTextField @bind-Value="newProduct.Name" Label="Product Name" Required="true" />
         <MudTextField @bind-Value="newProduct.Description" Label="Description" Required="true" />
         <MudTextField @bind-Value="newProduct.Price" Label="Price" Type="number" Required="true" />
 
-        <MudSelect @bind-Value="selectedCategoryId" Label="Category" Required="true">
+        <MudSelect @bind-Value="newProduct.CategoryId" Label="Category" Required="true">
             @foreach (var category in categories)
             {
                 <MudSelectItem Value="@category.Id">@category.Name</MudSelectItem>
             }
         </MudSelect>
 
-        <MudSelect @bind-Value="selectedStatus" Label="Status" Required="true">
+        <MudSelect @bind-Value="newProduct.Status" Label="Status" Required="true">
             @foreach (var status in Enum.GetValues<ProductStatus>())
             {
                 <MudSelectItem Value="@status">@status.ToString()</MudSelectItem>
             }
         </MudSelect>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel" Color="Color.Secondary">Cancel</MudButton>
+        <MudButton Color="Color.Primary" OnClick="SaveProduct">Add Product</MudButton>
+    </DialogActions>
+</MudDialog>
 
-        <MudButton Color="Color.Primary" OnClick="AddProduct">Add Product</MudButton>
-
-        @if (isSuccess)
-        {
-            <MudAlert Severity="Severity.Success">Product added successfully!</MudAlert>
-        }
-        @if (isError)
-        {
-            <MudAlert Severity="Severity.Error">Failed to add product.</MudAlert>
-        }
-    }
-    else
-    {
-        <a href="/login">Login as an admin to add products.</a>
-    }
-</MudPaper>
+@if (isSuccess)
+{
+    <MudAlert Severity="Severity.Success">Product successfully added!</MudAlert>
+}
+@if (isError)
+{
+    <MudAlert Severity="Severity.Error">Failed to add product.</MudAlert>
+}
 
 @code {
-    [Inject] private AuthHelper AuthHelper { get; set; }
-    private bool isAdmin;
-
     private ProductDto newProduct = new ProductDto();
     private List<CategoryDto> categories = new List<CategoryDto>();
-    private ProductStatus selectedStatus;
-    private int selectedCategoryId;
-    private bool isSuccess = false;
-    private bool isError = false;
+
+    private bool isSuccess;
+    private bool isError;
+
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
-        isAdmin = await AuthHelper.IsUserAdminAsync();
-        if (isAdmin)
+        var categoryResponse = await Http.GetFromJsonAsync<List<CategoryDto>>($"{Navigation.BaseUri}api/categories");
+        if (categoryResponse != null)
         {
-            categories = await Http.GetFromJsonAsync<List<CategoryDto>>($"{Navigation.BaseUri}api/categories");
+            categories = categoryResponse;
+            if (categories.Any())
+            {
+                newProduct.CategoryId = categories.First().Id;
+            }
         }
     }
 
-    private async Task AddProduct()
+    private async Task SaveProduct()
     {
         try
         {
-            newProduct.Status = selectedStatus;
-            newProduct.CategoryId = selectedCategoryId;
-
             var token = await AuthHelper.GetAccessTokenAsync();
             if (!string.IsNullOrEmpty(token))
             {
                 var requestMessage = new HttpRequestMessage(HttpMethod.Post, $"{Navigation.BaseUri}api/products")
-                    {
-                        Content = JsonContent.Create(newProduct)
-                    };
+                {
+                    Content = JsonContent.Create(newProduct)
+                };
                 requestMessage.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
                 var response = await Http.SendAsync(requestMessage);
@@ -88,8 +84,9 @@
                     isSuccess = true;
                     isError = false;
                     newProduct = new ProductDto();
-                    selectedCategoryId = 0;
-                    selectedStatus = ProductStatus.Available;
+                    StateHasChanged();
+                    await Task.Delay(1000);
+                    MudDialog.Close(DialogResult.Ok(true));
                 }
                 else
                 {
@@ -108,5 +105,10 @@
             isError = true;
             isSuccess = false;
         }
+    }
+
+    private void Cancel()
+    {
+        MudDialog.Close(DialogResult.Cancel());
     }
 }
