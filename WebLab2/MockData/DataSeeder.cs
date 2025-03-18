@@ -11,10 +11,8 @@ public class DataSeeder
         using var scope = serviceProvider.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-        // Ensure database is created
         await context.Database.EnsureCreatedAsync();
 
-        // Check if admin exists
         if (!context.Users.Any(u => u.Role == "Admin"))
         {
             var adminUser = new User
@@ -28,7 +26,6 @@ public class DataSeeder
             context.Users.Add(adminUser);
         }
 
-        // Check if regular user exists
         if (!context.Users.Any(u => u.Role == "User"))
         {
             var regularUser = new User

@@ -1,0 +1,47 @@
+﻿@page "/register"
+@using WebLab2.Models
+@inject HttpClient Http
+@inject NavigationManager Navigation
+
+<h3>Register</h3>
+
+@if (!string.IsNullOrEmpty(ErrorMessage))
+{
+    <p style="color: red">@ErrorMessage</p>
+}
+
+<EditForm Model="registerModel" OnValidSubmit="RegisterUser">
+    <DataAnnotationsValidator />
+    <div>
+        <label>Username:</label>
+        <InputText @bind-Value="registerModel.Username" />
+    </div>
+    <div>
+        <label>Password:</label>
+        <InputText @bind-Value="registerModel.Password" type="password" />
+    </div>
+    <button type="submit">Register</button>
+</EditForm>
+
+@code {
+    private UserDto registerModel = new();
+    private string ErrorMessage = "";
+
+    private async Task RegisterUser()
+    {
+        ErrorMessage = "";
+
+        var response = await Http.PostAsJsonAsync($"{Navigation.BaseUri}api/auth/register", registerModel);
+
+        if (response.IsSuccessStatusCode)
+        {
+            ErrorMessage = "Registration successful! Redirecting to login...";
+            await Task.Delay(2000);
+            Navigation.NavigateTo("/login");
+        }
+        else
+        {
+            ErrorMessage = await response.Content.ReadAsStringAsync();
+        }
+    }
+}
