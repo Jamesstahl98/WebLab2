@@ -58,6 +58,33 @@ public class CategoryController : ControllerBase
             return StatusCode(500, "Internal Server Error");
         }
     }
+    [Authorize(Roles = "Admin")]
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Delete(int id)
+    {
+        var category = await _unitOfWork.Categories.GetByIdAsync(id);
+        if (category == null)
+            return NotFound($"Category with Id {id} not found");
+        _unitOfWork.Categories.Delete(category);
+        await _unitOfWork.SaveChangesAsync();
+        return Ok();
+    }
+
+    [Authorize(Roles = "Admin")]
+    [HttpPut("{id}")]
+    public async Task<IActionResult> Update(int id, [FromBody] CategoryDto categoryDTO)
+    {
+        if (categoryDTO == null)
+            return BadRequest("Category data is required");
+        var category = await _unitOfWork.Categories.GetByIdAsync(id);
+        if (category == null)
+            return NotFound($"Category with Id {id} not found");
+        category.Name = categoryDTO.Name;
+        _unitOfWork.Categories.Update(category);
+        await _unitOfWork.SaveChangesAsync();
+        return Ok();
+    }
+
     [HttpGet("{id}")]
     public async Task<IActionResult> GetById(int id)
     {

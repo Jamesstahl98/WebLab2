@@ -1,0 +1,104 @@
+﻿@using MudBlazor
+@using WebLab2.Components.Pages
+@using WebLab2.HelperMethods
+@using WebLab2.Models
+@using static WebLab2.Enums.ProductStatusEnum
+@inject HttpClient Http
+@inject NavigationManager Navigation
+
+<MudDialog>
+
+    <TitleContent>Add Product</TitleContent>
+    <DialogContent>
+        <MudTextField @bind-Value="product.Name" Label="Product Name" Required="true" />
+        <MudTextField @bind-Value="product.Description" Label="Description" Required="true" />
+        <MudTextField @bind-Value="product.Price" Label="Price" Type="number" Required="true" />
+
+        <MudSelect @bind-Value="product.CategoryId" Label="Category" Required="true">
+            @foreach (var category in categories)
+            {
+                <MudSelectItem Value="@category.Id">@category.Name</MudSelectItem>
+            }
+        </MudSelect>
+
+        <MudSelect @bind-Value="product.Status" Label="Status" Required="true">
+            @foreach (var status in Enum.GetValues<ProductStatus>())
+            {
+                <MudSelectItem Value="@status">@status.ToString()</MudSelectItem>
+            }
+        </MudSelect>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel" Color="Color.Secondary">Cancel</MudButton>
+        <MudButton Color="Color.Secondary" OnClick="@(() => SaveProduct(product.Id))">
+            Edit
+        </MudButton>
+    </DialogActions>
+
+</MudDialog>
+@if (isSuccess)
+{
+    <MudAlert Severity="Severity.Success">Product successfully edited!</MudAlert>
+}
+@if (isError)
+{
+    <MudAlert Severity="Severity.Error">Failed to edit product.</MudAlert>
+}
+
+@code {
+    [Inject] private AuthHelper AuthHelper { get; set; }
+    private bool isSuccess;
+    private bool isError;
+
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; }
+    [Parameter] public ProductDto product { get; set; }
+    [Parameter] public List<CategoryDto> categories { get; set; }
+
+    private async Task SaveProduct(int id)
+    {
+        try
+        {
+            var token = await AuthHelper.GetAccessTokenAsync();
+            if (!string.IsNullOrEmpty(token))
+            {
+                var requestMessage = new HttpRequestMessage(HttpMethod.Put, $"{Navigation.BaseUri}api/products/{id}")
+                {
+                    Content = JsonContent.Create(product)
+                };
+                requestMessage.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+                var response = await Http.SendAsync(requestMessage);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    isSuccess = true;
+                    isError = false;
+                    StateHasChanged();
+                    await Task.Delay(1000);
+                    MudDialog.Close(DialogResult.Ok(true));
+                }
+                else
+                {
+                    isError = true;
+                    isSuccess = false;
+                }
+            }
+            else
+            {
+                isError = true;
+                isSuccess = false;
+            }
+        }
+        catch (Exception)
+        {
+            isError = true;
+            isSuccess = false;
+        }
+       
+    }
+
+    private void Cancel()
+    {
+        MudDialog.Close(DialogResult.Cancel());
+    }
+}

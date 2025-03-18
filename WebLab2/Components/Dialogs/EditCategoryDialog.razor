@@ -1,0 +1,87 @@
+﻿@using MudBlazor
+@using WebLab2.Components.Pages
+@using WebLab2.HelperMethods
+@using WebLab2.Models
+@inject HttpClient Http
+@inject NavigationManager Navigation
+
+<MudDialog>
+
+    <TitleContent>Edit Category</TitleContent>
+    <DialogContent>
+        <MudTextField @bind-Value="category.Name" Label="Product Name" Required="true" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel" Color="Color.Secondary">Cancel</MudButton>
+        <MudButton Color="Color.Secondary" OnClick="@(() => SaveCategory(category.Id))">
+            Edit
+        </MudButton>
+    </DialogActions>
+
+</MudDialog>
+@if (isSuccess)
+{
+    <MudAlert Severity="Severity.Success">Category successfully edited!</MudAlert>
+}
+@if (isError)
+{
+    <MudAlert Severity="Severity.Error">Failed to edit category.</MudAlert>
+}
+
+@code {
+    [Inject] private AuthHelper AuthHelper { get; set; }
+    private bool isSuccess;
+    private bool isError;
+
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; }
+    [Parameter] public CategoryDto category { get; set; }
+    [Parameter] public List<CategoryDto> categories { get; set; }
+
+    private async Task SaveCategory(int id)
+    {
+        try
+        {
+            var token = await AuthHelper.GetAccessTokenAsync();
+            if (!string.IsNullOrEmpty(token))
+            {
+                var requestMessage = new HttpRequestMessage(HttpMethod.Put, $"{Navigation.BaseUri}api/categories/{id}")
+                    {
+                        Content = JsonContent.Create(category)
+                    };
+                requestMessage.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+                var response = await Http.SendAsync(requestMessage);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    isSuccess = true;
+                    isError = false;
+                    StateHasChanged();
+                    await Task.Delay(1000);
+                    MudDialog.Close(DialogResult.Ok(true));
+                }
+                else
+                {
+                    isError = true;
+                    isSuccess = false;
+                }
+            }
+            else
+            {
+                isError = true;
+                isSuccess = false;
+            }
+        }
+        catch (Exception)
+        {
+            isError = true;
+            isSuccess = false;
+        }
+
+    }
+
+    private void Cancel()
+    {
+        MudDialog.Close(DialogResult.Cancel());
+    }
+}
