@@ -59,7 +59,6 @@
     protected override async Task OnInitializedAsync()
     {
         isAdmin = await AuthHelper.IsUserAdminAsync();
-        //Not sure if this is unsafe
         if (isAdmin)
         {
             categories = await Http.GetFromJsonAsync<List<CategoryDto>>($"{Navigation.BaseUri}api/categories");
@@ -72,15 +71,31 @@
         {
             newProduct.Status = selectedStatus;
             newProduct.CategoryId = selectedCategoryId;
-            var response = await Http.PostAsJsonAsync($"{Navigation.BaseUri}api/products", newProduct);
 
-            if (response.IsSuccessStatusCode)
+            var token = await AuthHelper.GetAccessTokenAsync();
+            if (!string.IsNullOrEmpty(token))
             {
-                isSuccess = true;
-                isError = false;
-                newProduct = new ProductDto();
-                selectedCategoryId = 0;
-                selectedStatus = ProductStatus.Available;
+                var requestMessage = new HttpRequestMessage(HttpMethod.Post, $"{Navigation.BaseUri}api/products")
+                    {
+                        Content = JsonContent.Create(newProduct)
+                    };
+                requestMessage.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+                var response = await Http.SendAsync(requestMessage);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    isSuccess = true;
+                    isError = false;
+                    newProduct = new ProductDto();
+                    selectedCategoryId = 0;
+                    selectedStatus = ProductStatus.Available;
+                }
+                else
+                {
+                    isError = true;
+                    isSuccess = false;
+                }
             }
             else
             {

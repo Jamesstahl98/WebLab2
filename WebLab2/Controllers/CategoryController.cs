@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using WebLab2.Entities;
 using WebLab2.Models;
 using WebLab2.Services;
@@ -30,7 +31,7 @@ public class CategoryController : ControllerBase
 
         return Ok(categoryDTOs);
     }
-
+    [Authorize(Roles = "Admin")]
     [HttpPost]
     public async Task<IActionResult> Add([FromBody] CategoryDto categoryDTO)
     {

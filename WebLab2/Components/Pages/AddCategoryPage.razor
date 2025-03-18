@@ -43,13 +43,28 @@ else
     {
         try
         {
-            var response = await Http.PostAsJsonAsync($"{Navigation.BaseUri}api/categories", newCategory);
-
-            if (response.IsSuccessStatusCode)
+            var token = await AuthHelper.GetAccessTokenAsync();
+            if (!string.IsNullOrEmpty(token))
             {
-                isSuccess = true;
-                isError = false;
-                newCategory = new CategoryDto();
+                var requestMessage = new HttpRequestMessage(HttpMethod.Post, $"{Navigation.BaseUri}api/categories")
+                    {
+                        Content = JsonContent.Create(newCategory)
+                    };
+                requestMessage.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+                var response = await Http.SendAsync(requestMessage);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    isSuccess = true;
+                    isError = false;
+                    newCategory = new CategoryDto();
+                }
+                else
+                {
+                    isError = true;
+                    isSuccess = false;
+                }
             }
             else
             {

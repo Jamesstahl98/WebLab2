@@ -35,7 +35,7 @@ public class AuthHelper
         return roleClaim?.Value == "Admin";
     }
 
-    private async Task<string?> GetAccessTokenAsync()
+    public async Task<string?> GetAccessTokenAsync()
     {
         return await _jsRuntime.InvokeAsync<string>("getCookie", "AccessToken");
     }
