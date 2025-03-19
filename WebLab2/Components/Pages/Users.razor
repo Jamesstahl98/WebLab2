@@ -53,7 +53,7 @@ else
 
                 if (!string.IsNullOrEmpty(token))
                 {
-                    var requestMessage = new HttpRequestMessage(HttpMethod.Get, $"{Navigation.BaseUri}api/users");
+                    var requestMessage = new HttpRequestMessage(HttpMethod.Get, $"{Navigation.BaseUri}api/user");
                     requestMessage.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
                     var response = await Http.SendAsync(requestMessage);
