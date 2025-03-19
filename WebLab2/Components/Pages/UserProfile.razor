@@ -1,0 +1,123 @@
+﻿@page "/profile"
+@using WebLab2.HelperMethods
+@using WebLab2.Models
+@inject HttpClient Http
+@inject NavigationManager Navigation
+
+<MudPaper Class="pa-4">
+    <MudForm>
+        <MudTextField @bind-Value="user.Username" Label="Username" Required="true" Variant="Variant.Outlined" />
+        <MudTextField @bind-Value="user.FirstName" Label="First Name" Required="true" Variant="Variant.Outlined" />
+        <MudTextField @bind-Value="user.LastName" Label="Last Name" Required="true" Variant="Variant.Outlined" />
+        <MudTextField @bind-Value="user.Email" Label="Email" Type="email" Required="true" Variant="Variant.Outlined" />
+        <MudTextField @bind-Value="user.PhoneNumber" Label="Phone Number" Required="true" Variant="Variant.Outlined" />
+        <MudTextField @bind-Value="user.Country" Label="Country" Required="true" Variant="Variant.Outlined" />
+        <MudTextField @bind-Value="user.City" Label="City" Required="true" Variant="Variant.Outlined" />
+        <MudTextField @bind-Value="user.Address" Label="Address" Required="true" Variant="Variant.Outlined" />
+        <MudTextField @bind-Value="user.Password" Label="Password" Variant="Variant.Outlined"
+        InputType="@PasswordInput" Adornment="Adornment.End" AdornmentIcon="@PasswordInputIcon"
+                      OnAdornmentClick="ShowPassword" AdornmentAriaLabel="Show Password" Required="true" />
+
+        <MudButton OnClick="SaveChanges" Color="Color.Primary">Save Changes</MudButton>
+    </MudForm>
+
+    @if (isSuccess)
+    {
+        <MudAlert Severity="Severity.Success">Profile updated successfully!</MudAlert>
+    }
+    @if (isError)
+    {
+        <MudAlert Severity="Severity.Error">Failed to update profile.</MudAlert>
+    }
+</MudPaper>
+
+@code {
+    [Inject] private AuthHelper AuthHelper { get; set; }
+
+    private UserDto user = new UserDto();
+    private bool isSuccess = false;
+    private bool isError = false;
+    private bool isAuthenticated = false;
+    private string errorMessage;
+
+    InputType PasswordInput = InputType.Password;
+    string PasswordInputIcon = Icons.Material.Filled.VisibilityOff;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var token = await AuthHelper.GetAccessTokenAsync();
+
+            if (!string.IsNullOrEmpty(token))
+            {
+                var requestMessage = new HttpRequestMessage(HttpMethod.Get, $"{Navigation.BaseUri}api/user/get-profile");
+                requestMessage.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+                var response = await Http.SendAsync(requestMessage);
+                if (response.IsSuccessStatusCode)
+                {
+                    user = await response.Content.ReadFromJsonAsync<UserDto>();
+                    isAuthenticated = true;
+                }
+                else
+                {
+                    isAuthenticated = false;
+                    isError = true;
+                    errorMessage = "Failed to fetch user profile. Please log in.";
+                }
+            }
+            else
+            {
+                isAuthenticated = false;
+                isError = true;
+                errorMessage = "Unauthorized access. No token found.";
+            }
+
+            StateHasChanged();
+        }
+    }
+
+    private async Task SaveChanges()
+    {
+        var token = await AuthHelper.GetAccessTokenAsync();
+        if (string.IsNullOrEmpty(token))
+        {
+            isError = true;
+            errorMessage = "You must be logged in to update your profile.";
+            return;
+        }
+
+        var requestMessage = new HttpRequestMessage(HttpMethod.Put, $"{Navigation.BaseUri}api/user/update-profile")
+            {
+                Content = JsonContent.Create(user)
+            };
+        requestMessage.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+        var response = await Http.SendAsync(requestMessage);
+        if (response.IsSuccessStatusCode)
+        {
+            isSuccess = true;
+            isError = false;
+        }
+        else
+        {
+            isError = true;
+            errorMessage = "Failed to update profile.";
+        }
+    }
+
+    private void ShowPassword()
+    {
+        if (PasswordInput == InputType.Password)
+        {
+            PasswordInput = InputType.Text;
+            PasswordInputIcon = Icons.Material.Filled.Visibility;
+        }
+        else
+        {
+            PasswordInput = InputType.Password;
+            PasswordInputIcon = Icons.Material.Filled.VisibilityOff;
+        }
+    }
+}
