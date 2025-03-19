@@ -19,6 +19,13 @@ public class DataSeeder
             {
                 Id = Guid.NewGuid(),
                 Username = "admin",
+                FirstName = "Admin",
+                LastName = "Adminson",
+                Email = "admin@admin.com",
+                PhoneNumber = "123456789",
+                Country = "Adminland",
+                City = "Admincity",
+                Address = "Adminstreet 123",
                 Role = "Admin"
             };
             adminUser.PasswordHash = new PasswordHasher<User>().HashPassword(adminUser, "Admin123!");
@@ -32,6 +39,13 @@ public class DataSeeder
             {
                 Id = Guid.NewGuid(),
                 Username = "user",
+                FirstName = "User",
+                LastName = "Userson",
+                Email = "user@user.com",
+                PhoneNumber = "987654321",
+                Country = "Userland",
+                City = "Usercity",
+                Address = "Userstreet 123",
                 Role = "User"
             };
             regularUser.PasswordHash = new PasswordHasher<User>().HashPassword(regularUser, "User123!");
