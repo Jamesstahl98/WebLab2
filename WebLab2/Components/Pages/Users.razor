@@ -9,13 +9,23 @@
 
 @if(isAdmin)
 {
-    <MudTable Items="@users" Striped="true" Hover="true">
+    <MudTextField @bind-Value="searchInput" Label="Filter by email"/>
+    <MudButton OnClick="SearchUserByEmail">Filter</MudButton>
+    <MudTable Items="@searchResults" Striped="true" Hover="true">
         <HeaderContent>
             <MudTh>Username</MudTh>
+            <MudTh>Name</MudTh>
+            <MudTh>Email</MudTh>
+            <MudTh>Phone Number</MudTh>
+            <MudTh>Address</MudTh>
             <MudTh>Role</MudTh>
         </HeaderContent>
         <RowTemplate>
             <MudTd DataLabel="Product Name">@context.Username</MudTd>
+            <MudTd DataLabel="Name">@context.FirstName @context.LastName</MudTd>
+            <MudTd DataLabel="Email">@context.Email</MudTd>
+            <MudTd DataLabel="Phone Number">@context.PhoneNumber</MudTd>
+            <MudTd DataLabel="Address">@context.Country, @context.City, @context.Address</MudTd>
             <MudTd DataLabel="Role">@context.Role</MudTd>
         </RowTemplate>
     </MudTable>
@@ -28,7 +38,9 @@ else
 @code {
     [Inject] private AuthHelper AuthHelper { get; set; }
     private bool isAdmin;
-    private List<UserDto> users = new List<UserDto>();
+    private List<UserDto> allUsers = new List<UserDto>();
+    private List<UserDto> searchResults = new List<UserDto>();
+    private string? searchInput;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -47,7 +59,8 @@ else
                     var response = await Http.SendAsync(requestMessage);
                     if (response.IsSuccessStatusCode)
                     {
-                        users = await response.Content.ReadFromJsonAsync<List<UserDto>>();
+                        allUsers = await response.Content.ReadFromJsonAsync<List<UserDto>>();
+                        searchResults = allUsers;
                     }
                     else
                     {
@@ -57,5 +70,15 @@ else
             }
             StateHasChanged();
         }
+    }
+
+    private void SearchUserByEmail()
+    {
+        if(searchInput == "" || searchInput is null)
+        {
+            searchResults = allUsers;
+            return;
+        }
+        searchResults = allUsers.Where(u => u.Email.Contains(searchInput)).ToList();
     }
 }
