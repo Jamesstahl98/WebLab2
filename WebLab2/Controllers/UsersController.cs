@@ -25,7 +25,14 @@ public class UsersController : Controller
         var userDTOs = users.Select(u => new UserDto
         {
             Username = u.Username,
-            Role = u.Role
+            Role = u.Role,
+            FirstName = u.FirstName,
+            LastName = u.LastName,
+            Email = u.Email,
+            PhoneNumber = u.PhoneNumber,
+            Country = u.Country,
+            City = u.City,
+            Address = u.Address
         });
         return Ok(userDTOs);
     }
