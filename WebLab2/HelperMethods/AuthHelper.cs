@@ -6,6 +6,22 @@ namespace WebLab2.HelperMethods;
 
 public class AuthHelper
 {
+    public event Action OnAuthenticationStateChanged;
+    private bool _isAuthenticated;
+    public bool IsAuthenticated
+    {
+        get => _isAuthenticated;
+        set
+        {
+            if (_isAuthenticated != value)
+            {
+                _isAuthenticated = value;
+                NotifyStateChanged();
+            }
+        }
+    }
+    public void NotifyStateChanged() => OnAuthenticationStateChanged?.Invoke();
+
     private readonly IJSRuntime _jsRuntime;
 
     public AuthHelper(IJSRuntime jsRuntime)

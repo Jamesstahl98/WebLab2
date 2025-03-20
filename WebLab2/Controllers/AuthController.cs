@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.JSInterop;
 using System.Security.Claims;
 using WebLab2.Entities;
+using WebLab2.HelperMethods;
 using WebLab2.Models;
 using WebLab2.Services;
 
@@ -10,7 +11,7 @@ namespace WebLab2.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class AuthController(IAuthService authService, IJSRuntime jSRuntime) : ControllerBase
+public class AuthController(IAuthService authService) : ControllerBase
 {
     [HttpPost("register")]
     public async Task<ActionResult<User>> Register(UserDto request)
@@ -57,6 +58,7 @@ public class AuthController(IAuthService authService, IJSRuntime jSRuntime) : Co
         //Does not work. Cookies are deleted in frontend for now.
         Response.Cookies.Delete("AccessToken");
         Response.Cookies.Delete("RefreshToken");
+
         return Ok();
     }
 
@@ -88,7 +90,7 @@ public class AuthController(IAuthService authService, IJSRuntime jSRuntime) : Co
     }
 
     [Authorize]
-    [HttpGet]
+    [HttpGet("authorize")]
     public IActionResult AuthenticatedOnlyEndpoint()
     {
         return Ok("You are authenticated");
