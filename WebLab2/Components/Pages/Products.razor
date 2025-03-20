@@ -1,32 +1,92 @@
 ﻿@page "/products"
+@using WebLab2.HelperMethods
 @using WebLab2.Models
 @inject HttpClient Http
 @inject NavigationManager Navigation
+@rendermode InteractiveServer
 
 <PageTitle>Products</PageTitle>
 
-<MudTable Items="@products" Striped="true" Hover="true">
-    <HeaderContent>
-        <MudTh>Product Name</MudTh>
-        <MudTh>Price</MudTh>
-        <MudTh>Status</MudTh>
-    </HeaderContent>
-    <RowTemplate>
-        <MudTd DataLabel="Product Name">@context.Name</MudTd>
-        <MudTd DataLabel="Price">@context.Price.ToString("C")</MudTd>
-        <MudTd DataLabel="Price">@context.Status.ToString()</MudTd>
-    </RowTemplate>
-</MudTable>
+<MudPaper Class="pa-4">
+    <MudTextField @bind-Value="searchInput" Label="Search by Name" OnKeyDown="HandleKeyPress"/>
+    <MudButton OnClick="SearchProductByName">Filter</MudButton>
+    <MudTable Items="@filteredProducts" Striped="true" Hover="true">
+        <HeaderContent>
+            <MudTh>Product Name</MudTh>
+            <MudTh>Price</MudTh>
+            <MudTh>Category</MudTh>
+            <MudTh>Status</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Product Name">@context.Name</MudTd>
+            <MudTd DataLabel="Price">@context.Price.ToString("C")</MudTd>
+            <MudTd DataLabel="Category">@GetCategoryName(@context.CategoryId)</MudTd>
+            <MudTd DataLabel="Status">@context.Status</MudTd>
+        </RowTemplate>
+    </MudTable>
+
+    @if (!filteredProducts.Any())
+    {
+        <MudAlert Severity="Severity.Warning">No products found.</MudAlert>
+    }
+</MudPaper>
 
 @code {
-    private List<ProductDto> products = new List<ProductDto>();
+    private List<ProductDto> products = new();
+    private List<ProductDto> filteredProducts = new();
+    private List<CategoryDto> categories = new();
+    private string? searchInput = "";
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        var response = await Http.GetFromJsonAsync<List<ProductDto>>($"{Navigation.BaseUri}api/products");
-        if (response != null)
+        if (firstRender)
         {
-            products = response;
+            await RefreshCategories();
+            await RefreshProducts();
+            StateHasChanged();
+        }
+    }
+
+    private async Task RefreshCategories()
+    {
+        var categoryResponse = await Http.GetFromJsonAsync<List<CategoryDto>>($"{Navigation.BaseUri}api/categories");
+        if (categoryResponse != null)
+        {
+            categories = categoryResponse;
+        }
+    }
+
+    private async Task RefreshProducts()
+    {
+        var productsResponse = await Http.GetFromJsonAsync<List<ProductDto>>($"{Navigation.BaseUri}api/products");
+        if (productsResponse != null)
+        {
+            products = productsResponse;
+            filteredProducts = products;
+        }
+    }
+
+    private string GetCategoryName(int categoryId)
+    {
+        var category = categories.FirstOrDefault(c => c.Id == categoryId);
+        return category?.Name ?? "Unknown Category";
+    }
+
+    private void SearchProductByName()
+    {
+        if (searchInput == "" || searchInput is null)
+        {
+            filteredProducts = products;
+            return;
+        }
+        filteredProducts = products.Where(p => p.Name.ToUpper().Contains(searchInput.ToUpper())).ToList();
+    }
+
+    private void HandleKeyPress(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            SearchProductByName();
         }
     }
 }
