@@ -1,13 +1,66 @@
-﻿
+﻿@using WebLab2.HelperMethods
+@using WebLab2.Services
+@inject NavigationManager Navigation
+@inject HttpClient Http
+
 <MudNavMenu>
-    <MudNavLink Href="" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">Home</MudNavLink>
-    <MudNavLink Href="/login" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.List">Login</MudNavLink>
-    <MudNavLink Href="/profile">Edit Profile</MudNavLink>
-    <MudNavLink Href="/register">Register</MudNavLink>
-    <MudNavLink Href="/products">Products</MudNavLink>
-    <MudNavLink Href="/protected">Protected</MudNavLink>
-    <MudNavLink Href="/edit-products">Edit Products</MudNavLink>
-    <MudNavLink Href="/logout">Logout</MudNavLink>
+    @if (!isAuthenticated)
+    {
+        <GuestNavbar />
+    }
+    else if (isAdmin)
+    {
+        <AdminNavbar />
+    }
+    else
+    {
+        <UserNavbar />
+    }
 </MudNavMenu>
 
+@code
+{
+    [Inject] private AuthHelper AuthHelper { get; set; }
 
+    private bool isAdmin = false;
+    private bool isAuthenticated = false;
+
+    private void HandleAuthenticationStateChanged()
+    {
+        CheckUser();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            AuthHelper.OnAuthenticationStateChanged += HandleAuthenticationStateChanged;
+            await CheckUser();
+        }
+    }
+
+    public async Task CheckUser()
+    {
+        var token = await AuthHelper.GetAccessTokenAsync();
+
+        if (!string.IsNullOrEmpty(token))
+        {
+            var requestMessage = new HttpRequestMessage(HttpMethod.Get, $"{Navigation.BaseUri}api/auth/authorize");
+            requestMessage.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+            var response = await Http.SendAsync(requestMessage);
+            if (response.IsSuccessStatusCode)
+            {
+                isAuthenticated = true;
+                isAdmin = await AuthHelper.IsUserAdminAsync();
+            }
+        }
+        else
+        {
+            isAuthenticated = false;
+            isAdmin = false;
+        }
+
+        StateHasChanged();
+    }
+}

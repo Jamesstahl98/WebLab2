@@ -1,4 +1,6 @@
 ﻿@page "/login"
+@using WebLab2.Components.Layout
+@using WebLab2.HelperMethods
 @using WebLab2.Models
 @inject HttpClient Http
 @inject NavigationManager Navigation
@@ -25,6 +27,7 @@
 </EditForm>
 
 @code {
+    [Inject] private AuthHelper AuthHelper { get; set; }
     private UserDto loginModel = new();
     private string ErrorMessage = "";
 
@@ -47,7 +50,7 @@
                     await JSRuntime.InvokeVoidAsync("setCookie", "RefreshToken", ExtractTokenValue(cookie));
                 }
             }
-
+            AuthHelper.IsAuthenticated = true;
             Navigation.NavigateTo("/");
         }
         else
