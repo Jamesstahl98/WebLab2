@@ -9,7 +9,7 @@
 
 @if(isAdmin)
 {
-    <MudTextField @bind-Value="searchInput" Label="Filter by email"/>
+    <MudTextField @bind-Value="searchInput" Label="Filter by email" OnKeyDown="HandleKeyPress"/>
     <MudButton OnClick="SearchUserByEmail">Filter</MudButton>
     <MudTable Items="@searchResults" Striped="true" Hover="true">
         <HeaderContent>
@@ -80,5 +80,13 @@ else
             return;
         }
         searchResults = allUsers.Where(u => u.Email.Contains(searchInput)).ToList();
+    }
+
+    private void HandleKeyPress(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            SearchUserByEmail();
+        }
     }
 }
