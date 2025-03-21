@@ -8,6 +8,7 @@ using WebLab2.Components;
 using WebLab2.Data;
 using WebLab2.HelperMethods;
 using WebLab2.MockData;
+using WebLab2.Repositories;
 using WebLab2.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -65,8 +66,10 @@ builder.Services.ConfigureApplicationCookie(options =>
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
+builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<AuthHelper>();
 builder.Services.AddControllers();
 

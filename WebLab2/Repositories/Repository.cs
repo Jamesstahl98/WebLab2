@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using WebLab2.Data;
 
-namespace WebLab2.Services;
+namespace WebLab2.Repositories;
 
 public class Repository<T> : IRepository<T> where T : class
 {
