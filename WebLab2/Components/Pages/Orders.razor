@@ -11,14 +11,18 @@
         <HeaderContent>
             <MudTh>Order Id</MudTh>
             <MudTh>User Id</MudTh>
+            <MudTh>User Email</MudTh>
             <MudTh>Product Id</MudTh>
+            <MudTh>Product Name</MudTh>
             <MudTh>Quantity</MudTh>
             <MudTh>Time Placed</MudTh>
         </HeaderContent>
         <RowTemplate>
             <MudTd DataLabel="Order Id">@context.Id</MudTd>
             <MudTd DataLabel="User Id">@context.UserId</MudTd>
+            <MudTd DataLabel="User Email">@context.UserEmail</MudTd>
             <MudTd DataLabel="Product Id">@context.ProductId</MudTd>
+            <MudTd DataLabel="Product Name">@context.ProductName</MudTd>
             <MudTd DataLabel="Quantity">@context.Quantity</MudTd>
             <MudTd DataLabel="Time Placed">@context.CreatedDate</MudTd>
         </RowTemplate>

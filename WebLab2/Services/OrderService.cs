@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using WebLab2.Components.Pages;
 using WebLab2.Data;
 using WebLab2.Entities;
 using WebLab2.Models;
@@ -9,7 +10,6 @@ namespace WebLab2.Services;
 public class OrderService : IOrderService
 {
     private readonly IUnitOfWork _unitOfWork;
-    private HttpClient httpClient;
 
     public OrderService(IUnitOfWork unitOfWork)
     {
@@ -37,14 +37,6 @@ public class OrderService : IOrderService
 
     public async Task<IEnumerable<OrderDto>> GetOrdersAsync()
     {
-        var orders = await _unitOfWork.Orders.GetAllAsync();
-        return orders.Select(o => new OrderDto
-        {
-            Id = o.Id,
-            ProductId = o.ProductId,
-            Quantity = o.Quantity,
-            UserId = o.UserId,
-            CreatedDate = o.Date
-        }).ToList();
+        return await _unitOfWork.Orders.GetAllAsync();
     }
 }

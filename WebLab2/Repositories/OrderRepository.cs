@@ -25,8 +25,36 @@ public class OrderRepository : IOrderRepository
     {
         return await _context.Orders.FindAsync(id);
     }
-    public async Task<IEnumerable<Order>> GetAllAsync()
+    public async Task<IEnumerable<OrderDto>> GetAllAsync()
     {
-        return await _context.Orders.ToListAsync();
+        var orders = await _context.Orders
+            .Join(_context.Users,
+                order => order.UserId,
+                user => user.Id,
+                (order, user) => new
+                {
+                    order.Id,
+                    order.UserId,
+                    UserEmail = user.Email,
+                    order.ProductId,
+                    order.Quantity,
+                    order.Date
+                })
+            .Join(_context.Products,
+                order => order.ProductId,
+                product => product.Id,
+                (order, product) => new OrderDto
+                {
+                    Id = order.Id,
+                    UserId = order.UserId,
+                    UserEmail = order.UserEmail,
+                    ProductId = order.ProductId,
+                    ProductName = product.Name,
+                    Quantity = order.Quantity,
+                    CreatedDate = order.Date
+                })
+            .ToListAsync();
+
+        return orders;
     }
 }
