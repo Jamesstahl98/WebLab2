@@ -10,27 +10,22 @@ namespace WebLab2.Controllers;
 [Route("api/categories")]
 public class CategoryController : ControllerBase
 {
-    private readonly IUnitOfWork _unitOfWork;
-    private readonly ILogger<ProductController> _logger;
+    private readonly ICategoryService _categoryService;
+    private readonly ILogger<CategoryController> _logger;
 
-    public CategoryController(IUnitOfWork unitOfWork, ILogger<ProductController> logger)
+    public CategoryController(ICategoryService categoryService, ILogger<CategoryController> logger)
     {
-        _unitOfWork = unitOfWork;
+        _categoryService = categoryService;
         _logger = logger;
     }
 
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
-        var categories = await _unitOfWork.Categories.GetAllAsync();
-        var categoryDTOs = categories.Select(c => new CategoryDto
-        {
-            Id = c.Id,
-            Name = c.Name
-        });
-
+        var categoryDTOs = await _categoryService.GetAllCategoriesAsync();
         return Ok(categoryDTOs);
     }
+
     [Authorize(Roles = "Admin")]
     [HttpPost]
     public async Task<IActionResult> Add([FromBody] CategoryDto categoryDTO)
@@ -40,17 +35,8 @@ public class CategoryController : ControllerBase
 
         try
         {
-            var category = new Category
-            {
-                Name = categoryDTO.Name
-            };
-            await _unitOfWork.Categories.AddAsync(category);
-            await _unitOfWork.SaveChangesAsync();
-            return CreatedAtAction(nameof(GetAll), new { id = category.Id }, new CategoryDto
-            {
-                Id = category.Id,
-                Name = category.Name
-            });
+            var createdCategory = await _categoryService.AddCategoryAsync(categoryDTO);
+            return CreatedAtAction(nameof(GetById), new { id = createdCategory.Id }, createdCategory);
         }
         catch (Exception ex)
         {
@@ -58,15 +44,15 @@ public class CategoryController : ControllerBase
             return StatusCode(500, "Internal Server Error");
         }
     }
+
     [Authorize(Roles = "Admin")]
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id)
     {
-        var category = await _unitOfWork.Categories.GetByIdAsync(id);
-        if (category == null)
+        var isDeleted = await _categoryService.DeleteCategoryAsync(id);
+        if (!isDeleted)
             return NotFound($"Category with Id {id} not found");
-        _unitOfWork.Categories.Delete(category);
-        await _unitOfWork.SaveChangesAsync();
+
         return Ok();
     }
 
@@ -76,26 +62,20 @@ public class CategoryController : ControllerBase
     {
         if (categoryDTO == null)
             return BadRequest("Category data is required");
-        var category = await _unitOfWork.Categories.GetByIdAsync(id);
-        if (category == null)
+
+        var isUpdated = await _categoryService.UpdateCategoryAsync(id, categoryDTO);
+        if (!isUpdated)
             return NotFound($"Category with Id {id} not found");
-        category.Name = categoryDTO.Name;
-        _unitOfWork.Categories.Update(category);
-        await _unitOfWork.SaveChangesAsync();
+
         return Ok();
     }
 
     [HttpGet("{id}")]
     public async Task<IActionResult> GetById(int id)
     {
-        var category = await _unitOfWork.Categories.GetByIdAsync(id);
-        if (category == null)
+        var categoryDTO = await _categoryService.GetCategoryByIdAsync(id);
+        if (categoryDTO == null)
             return NotFound($"Category with Id {id} not found");
-
-        var categoryDTO = new CategoryDto
-        {
-            Name = category.Name
-        };
 
         return Ok(categoryDTO);
     }

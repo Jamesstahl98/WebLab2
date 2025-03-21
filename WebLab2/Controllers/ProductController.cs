@@ -10,11 +10,11 @@ namespace WebLab2.Controllers;
 [Route("api/products")]
 public class ProductController : ControllerBase
 {
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IProductService _productService;
 
-    public ProductController(IUnitOfWork unitOfWork)
+    public ProductController(IProductService productService)
     {
-        _unitOfWork = unitOfWork;
+        _productService = productService;
     }
 
     [Authorize(Roles = "Admin")]
@@ -26,28 +26,13 @@ public class ProductController : ControllerBase
 
         try
         {
-            var category = await _unitOfWork.Categories
-                .GetByIdAsync(productDTO.CategoryId);
-
-            if (category == null)
-                return BadRequest($"Category with ID '{productDTO.CategoryId}' not found");
-
-            var product = new Product
+            var createdProduct = await _productService.AddProductAsync(productDTO);
+            if (createdProduct == null)
             {
-                Name = productDTO.Name,
-                Description = productDTO.Description,
-                Price = productDTO.Price,
-                CategoryId = category.Id,
-                Category = category,
-                Status = productDTO.Status
-            };
+                return BadRequest("Failed to create product.");
+            }
 
-            await _unitOfWork.Products.AddAsync(product);
-            await _unitOfWork.SaveChangesAsync();
-
-            productDTO.Id = product.Id;
-
-            return CreatedAtAction(nameof(GetAll), new { id = product.Id }, productDTO);
+            return CreatedAtAction(nameof(GetById), new { id = createdProduct.Id }, createdProduct);
         }
         catch (Exception)
         {
@@ -58,37 +43,32 @@ public class ProductController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
-        var products = await _unitOfWork.Products.GetAllAsync();
-
-        var productDTOs = products.Select(p => new ProductDto
+        try
         {
-            Id = p.Id,
-            Name = p.Name,
-            Description = p.Description,
-            Price = p.Price,
-            CategoryId = p.CategoryId,
-            Status = p.Status
-        }).ToList();
-
-        return Ok(productDTOs);
+            var productDTOs = await _productService.GetAllProductsAsync();
+            return Ok(productDTOs);
+        }
+        catch (Exception)
+        {
+            return StatusCode(500, "Internal Server Error");
+        }
     }
 
     [HttpGet("{id}")]
     public async Task<IActionResult> GetById(int id)
     {
-        var product = await _unitOfWork.Products.GetByIdAsync(id);
-        if (product == null)
-            return NotFound($"Product with ID '{id}' not found");
-        var productDTO = new ProductDto
+        try
         {
-            Id = product.Id,
-            Name = product.Name,
-            Description = product.Description,
-            Price = product.Price,
-            CategoryId = product.Category?.Id ?? 0,
-            Status = product.Status
-        };
-        return Ok(productDTO);
+            var productDTO = await _productService.GetProductByIdAsync(id);
+            if (productDTO == null)
+                return NotFound($"Product with ID '{id}' not found");
+
+            return Ok(productDTO);
+        }
+        catch (Exception)
+        {
+            return StatusCode(500, "Internal Server Error");
+        }
     }
 
     [Authorize(Roles = "Admin")]
@@ -97,32 +77,36 @@ public class ProductController : ControllerBase
     {
         if (productDTO == null)
             return BadRequest("Product data is required");
-        var product = await _unitOfWork.Products.GetByIdAsync(id);
-        if (product == null)
-            return NotFound($"Product with ID '{id}' not found");
-        var category = await _unitOfWork.Categories.GetByIdAsync(productDTO.CategoryId);
-        if (category == null)
-            return BadRequest($"Category with ID '{productDTO.CategoryId}' not found");
 
-        product.Name = productDTO.Name;
-        product.Description = productDTO.Description;
-        product.Price = productDTO.Price;
-        product.CategoryId = category.Id;
-        product.Category = category;
-        product.Status = productDTO.Status;
-        await _unitOfWork.SaveChangesAsync();
-        return Ok(productDTO);
+        try
+        {
+            var updatedProduct = await _productService.UpdateProductAsync(id, productDTO);
+            if (updatedProduct == null)
+                return NotFound($"Product with ID '{id}' not found");
+
+            return Ok(updatedProduct);
+        }
+        catch (Exception)
+        {
+            return StatusCode(500, "Internal Server Error");
+        }
     }
 
     [Authorize(Roles = "Admin")]
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id)
     {
-        var product = await _unitOfWork.Products.GetByIdAsync(id);
-        if (product == null)
-            return NotFound($"Product with ID '{id}' not found");
-        _unitOfWork.Products.Delete(product);
-        await _unitOfWork.SaveChangesAsync();
-        return Ok();
+        try
+        {
+            var success = await _productService.DeleteProductAsync(id);
+            if (!success)
+                return NotFound($"Product with ID '{id}' not found");
+
+            return Ok();
+        }
+        catch (Exception)
+        {
+            return StatusCode(500, "Internal Server Error");
+        }
     }
 }
