@@ -31,4 +31,11 @@ public class OrderController : ControllerBase
             return BadRequest(new { error = ex.Message });
         }
     }
+
+    [HttpGet]
+    public async Task<IActionResult> GetOrders()
+    {
+        var ordersDto = await _orderService.GetOrdersAsync();
+        return Ok(ordersDto);
+    }
 }

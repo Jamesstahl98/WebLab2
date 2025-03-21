@@ -9,6 +9,7 @@ namespace WebLab2.Services;
 public class OrderService : IOrderService
 {
     private readonly IUnitOfWork _unitOfWork;
+    private HttpClient httpClient;
 
     public OrderService(IUnitOfWork unitOfWork)
     {
@@ -25,12 +26,25 @@ public class OrderService : IOrderService
             ProductId = orderDto.ProductId,
             Quantity = orderDto.Quantity,
             UserId = orderDto.UserId,
-            Date = DateTime.UtcNow
+            Date = orderDto.CreatedDate
         };
 
         await _unitOfWork.Orders.AddAsync(order);
         await _unitOfWork.SaveChangesAsync();
 
         return order;
+    }
+
+    public async Task<IEnumerable<OrderDto>> GetOrdersAsync()
+    {
+        var orders = await _unitOfWork.Orders.GetAllAsync();
+        return orders.Select(o => new OrderDto
+        {
+            Id = o.Id,
+            ProductId = o.ProductId,
+            Quantity = o.Quantity,
+            UserId = o.UserId,
+            CreatedDate = o.Date
+        }).ToList();
     }
 }

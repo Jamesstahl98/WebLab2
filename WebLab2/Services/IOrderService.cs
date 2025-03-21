@@ -6,4 +6,5 @@ namespace WebLab2.Services;
 public interface IOrderService
 {
     Task<Order> CreateOrderAsync(OrderDto order);
+    Task<IEnumerable<OrderDto>> GetOrdersAsync();
 }
