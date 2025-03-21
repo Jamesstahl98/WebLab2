@@ -1,4 +1,5 @@
 ﻿@page "/products"
+@using WebLab2.Entities
 @using WebLab2.HelperMethods
 @using WebLab2.Models
 @inject HttpClient Http
@@ -7,34 +8,64 @@
 
 <PageTitle>Products</PageTitle>
 
-<MudPaper Class="pa-4">
-    <MudTextField @bind-Value="searchInput" Label="Search by Name" OnKeyDown="HandleKeyPress"/>
-    <MudButton OnClick="SearchProductByName">Filter</MudButton>
-    <MudTable Items="@filteredProducts" Striped="true" Hover="true">
-        <HeaderContent>
-            <MudTh>Product Name</MudTh>
-            <MudTh>Price</MudTh>
-            <MudTh>Category</MudTh>
-            <MudTh>Status</MudTh>
-        </HeaderContent>
-        <RowTemplate>
-            <MudTd DataLabel="Product Name">@context.Name</MudTd>
-            <MudTd DataLabel="Price">@context.Price.ToString("C")</MudTd>
-            <MudTd DataLabel="Category">@GetCategoryName(@context.CategoryId)</MudTd>
-            <MudTd DataLabel="Status">@context.Status</MudTd>
-        </RowTemplate>
-    </MudTable>
+<MudGrid>
+    <MudItem xs="9">
+        <MudPaper Class="pa-4">
+            <MudTextField @bind-Value="searchInput" Label="Search by Name" OnKeyDown="HandleKeyPress"/>
+            <MudButton OnClick="SearchProductByName">Filter</MudButton>
+            <MudTable Items="@filteredProducts" Striped="true" Hover="true">
+                <HeaderContent>
+                    <MudTh>Product Name</MudTh>
+                    <MudTh>Price</MudTh>
+                    <MudTh>Category</MudTh>
+                    <MudTh>Status</MudTh>
+                    <MudTh>Action</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Product Name">@context.Name</MudTd>
+                    <MudTd DataLabel="Price">@context.Price.ToString("C")</MudTd>
+                    <MudTd DataLabel="Category">@GetCategoryName(@context.CategoryId)</MudTd>
+                    <MudTd DataLabel="Status">@context.Status</MudTd>
+                    <MudTd>
+                        <MudButton OnClick="() => AddToCart(context)" Color="Color.Primary">Add to Cart</MudButton>
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
+            @if (!filteredProducts.Any())
+            {
+                <MudAlert Severity="Severity.Warning">No products found.</MudAlert>
+            }
+        </MudPaper>
+    </MudItem>
 
-    @if (!filteredProducts.Any())
-    {
-        <MudAlert Severity="Severity.Warning">No products found.</MudAlert>
-    }
-</MudPaper>
+    <MudItem xs="3">
+        <MudPaper Class="pa-4" Elevation="4">
+            <h3>Shopping Cart</h3>
+            <MudList T="ProductDto">
+                @foreach (var item in cart)
+                {
+                    <MudListItem T="ProductDto">
+                        <MudText>@item.Name - @item.Price.ToString("C")</MudText>
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="() => RemoveFromCart(item)" />
+                    </MudListItem>
+                }
+            </MudList>
+            @if (!cart.Any())
+            {
+                <MudAlert Severity="Severity.Info">Your cart is empty.</MudAlert>
+            }
+            <MudButton OnClick="PurchaseItems" Disabled="!cart.Any()">Purchase</MudButton>
+        </MudPaper>
+    </MudItem>
+</MudGrid>
+
 
 @code {
+    [Inject] private AuthHelper AuthHelper { get; set; }
     private List<ProductDto> products = new();
     private List<ProductDto> filteredProducts = new();
     private List<CategoryDto> categories = new();
+    private List<ProductDto> cart = new();
     private string? searchInput = "";
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -88,5 +119,65 @@
         {
             SearchProductByName();
         }
+    }
+
+    private void AddToCart(ProductDto product)
+    {
+        cart.Add(product);
+    }
+
+    private void RemoveFromCart(ProductDto product)
+    {
+        cart.Remove(product);
+    }
+    private async Task PurchaseItems()
+    {
+        var userId = await GetUserIdAsync();
+        if (userId == null)
+        {
+            Console.WriteLine("Failed to retrieve user ID.");
+            return;
+        }
+        foreach (var item in cart.ToList())
+        {
+            var orderDto = new OrderDto
+                {
+                    ProductId = item.Id,
+                    Quantity = 1,
+                    UserId = userId.Value
+                };
+
+            var response = await Http.PostAsJsonAsync($"{Navigation.BaseUri}api/orders/purchase", orderDto);
+
+            if (response.IsSuccessStatusCode)
+            {
+                cart.Clear();
+            }
+            else
+            {
+                Console.WriteLine("Purchase failed.");
+            }
+        }
+    }
+
+    private async Task<Guid?> GetUserIdAsync()
+    {
+        var token = await AuthHelper.GetAccessTokenAsync();
+
+        if (!string.IsNullOrEmpty(token))
+        {
+            var requestMessage = new HttpRequestMessage(HttpMethod.Get, $"{Navigation.BaseUri}api/user/get-profile");
+            requestMessage.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+            var response = await Http.SendAsync(requestMessage);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var userDto = await response.Content.ReadFromJsonAsync<UserDto>();
+                return userDto?.Id;
+            }
+        }
+        Console.WriteLine("Failed to retrieve user profile.");
+        return null;
     }
 }

@@ -1,6 +1,6 @@
 ﻿using WebLab2.Entities;
 
-namespace WebLab2.Services;
+namespace WebLab2.Repositories;
 
 public interface IProductRepository : IRepository<Product>
 {

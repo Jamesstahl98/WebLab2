@@ -55,6 +55,7 @@ public class UsersController : Controller
 
         var userDto = new UserDto
         {
+            Id = user.Id,
             Username = user.Username,
             FirstName = user.FirstName,
             LastName = user.LastName,
