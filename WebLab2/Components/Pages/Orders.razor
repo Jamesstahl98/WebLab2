@@ -1,0 +1,74 @@
+﻿@page "/orders"
+@using WebLab2.HelperMethods
+@using WebLab2.Models
+@inject HttpClient Http
+@inject NavigationManager Navigation
+
+<PageTitle>Orders</PageTitle>
+@if (isAdmin)
+{
+    <MudTable Items="@orders" Striped="true" Hover="true">
+        <HeaderContent>
+            <MudTh>Order Id</MudTh>
+            <MudTh>User Id</MudTh>
+            <MudTh>User Email</MudTh>
+            <MudTh>Product Id</MudTh>
+            <MudTh>Product Name</MudTh>
+            <MudTh>Quantity</MudTh>
+            <MudTh>Time Placed</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Order Id">@context.Id</MudTd>
+            <MudTd DataLabel="User Id">@context.UserId</MudTd>
+            <MudTd DataLabel="User Email">@context.UserEmail</MudTd>
+            <MudTd DataLabel="Product Id">@context.ProductId</MudTd>
+            <MudTd DataLabel="Product Name">@context.ProductName</MudTd>
+            <MudTd DataLabel="Quantity">@context.Quantity</MudTd>
+            <MudTd DataLabel="Time Placed">@context.CreatedDate</MudTd>
+        </RowTemplate>
+    </MudTable>
+}
+else
+{
+    <a href="/login">Login as an admin to view users.</a>
+}
+@code {
+    [Inject] private AuthHelper AuthHelper { get; set; }
+    private bool isAdmin;
+    private List<OrderDto> orders = new List<OrderDto>();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            isAdmin = await AuthHelper.IsUserAdminAsync();
+            if (isAdmin)
+            {
+                orders = await GetOrders();
+            }
+            StateHasChanged();
+        }
+    }
+
+    private async Task<List<OrderDto>> GetOrders()
+    {
+        var token = await AuthHelper.GetAccessTokenAsync();
+
+        if (!string.IsNullOrEmpty(token))
+        {
+            var requestMessage = new HttpRequestMessage(HttpMethod.Get, $"{Navigation.BaseUri}api/orders");
+            requestMessage.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+            var response = await Http.SendAsync(requestMessage);
+            if (response.IsSuccessStatusCode)
+            {
+                return await response.Content.ReadFromJsonAsync<List<OrderDto>>();
+            }
+            else
+            {
+                Console.WriteLine("Unauthorized or Forbidden access.");
+            }
+        }
+        return new List<OrderDto>();
+    }
+}

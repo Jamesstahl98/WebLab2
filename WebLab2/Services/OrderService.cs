@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using WebLab2.Components.Pages;
 using WebLab2.Data;
 using WebLab2.Entities;
 using WebLab2.Models;
@@ -25,12 +26,17 @@ public class OrderService : IOrderService
             ProductId = orderDto.ProductId,
             Quantity = orderDto.Quantity,
             UserId = orderDto.UserId,
-            Date = DateTime.UtcNow
+            Date = orderDto.CreatedDate
         };
 
         await _unitOfWork.Orders.AddAsync(order);
         await _unitOfWork.SaveChangesAsync();
 
         return order;
+    }
+
+    public async Task<IEnumerable<OrderDto>> GetOrdersAsync()
+    {
+        return await _unitOfWork.Orders.GetAllAsync();
     }
 }
