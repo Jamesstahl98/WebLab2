@@ -9,35 +9,22 @@ using WebLab2.Services;
 
 namespace WebLab2.Controllers;
 
-
 [ApiController]
 [Route("api/user")]
 public class UsersController : Controller
 {
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IUserService _userService;
 
-    public UsersController(IUnitOfWork unitOfWork)
+    public UsersController(IUserService userService)
     {
-        _unitOfWork = unitOfWork;
+        _userService = userService;
     }
 
     [Authorize(Roles = "Admin")]
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
-        var users = await _unitOfWork.Users.GetAllAsync();
-        var userDTOs = users.Select(u => new UserDto
-        {
-            Username = u.Username,
-            Role = u.Role,
-            FirstName = u.FirstName,
-            LastName = u.LastName,
-            Email = u.Email,
-            PhoneNumber = u.PhoneNumber,
-            Country = u.Country,
-            City = u.City,
-            Address = u.Address
-        });
+        var userDTOs = await _userService.GetAllUsersAsync();
         return Ok(userDTOs);
     }
 
@@ -50,21 +37,8 @@ public class UsersController : Controller
             return Unauthorized("Invalid user ID");
         }
 
-        var user = await _unitOfWork.Users.GetByIdAsync(userId);
-        if (user == null) return NotFound("User not found");
-
-        var userDto = new UserDto
-        {
-            Id = user.Id,
-            Username = user.Username,
-            FirstName = user.FirstName,
-            LastName = user.LastName,
-            Email = user.Email,
-            PhoneNumber = user.PhoneNumber,
-            Country = user.Country,
-            City = user.City,
-            Address = user.Address
-        };
+        var userDto = await _userService.GetUserProfileAsync(userId);
+        if (userDto == null) return NotFound("User not found");
 
         return Ok(userDto);
     }
@@ -78,34 +52,12 @@ public class UsersController : Controller
             return Unauthorized("Invalid user ID");
         }
 
-        var user = await _unitOfWork.Users.GetByIdAsync(userId);
-        if (user == null) return NotFound("User does not exist");
-
-        if (!string.Equals(user.Username, updatedUser.Username, StringComparison.OrdinalIgnoreCase))
+        var updatedUserDto = await _userService.UpdateUserProfileAsync(userId, updatedUser);
+        if (updatedUserDto == null)
         {
-            var usernameExists = await _unitOfWork.Users.UsernameExistsAsync(updatedUser.Username);
-            if (usernameExists)
-            {
-                return BadRequest("Username already exists.");
-            }
+            return BadRequest("Username already exists or user not found.");
         }
 
-        user.Username = updatedUser.Username;
-        user.FirstName = updatedUser.FirstName;
-        user.LastName = updatedUser.LastName;
-        user.Email = updatedUser.Email;
-        user.PhoneNumber = updatedUser.PhoneNumber;
-        user.Country = updatedUser.Country;
-        user.City = updatedUser.City;
-        user.Address = updatedUser.Address;
-
-        if (!string.IsNullOrEmpty(updatedUser.Password))
-        {
-            user.PasswordHash = new PasswordHasher<User>().HashPassword(user, updatedUser.Password);
-        }
-
-        _unitOfWork.Users.Update(user);
-        await _unitOfWork.SaveChangesAsync();
-        return Ok("Profile updated successfully");
+        return Ok(updatedUserDto);
     }
 }

@@ -1,4 +1,5 @@
 ﻿using WebLab2.Entities;
+using WebLab2.Repositories;
 
 namespace WebLab2.Services;
 
