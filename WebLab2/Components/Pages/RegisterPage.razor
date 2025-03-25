@@ -11,9 +11,9 @@
     {
         <MudAlert Severity="Severity.Success">User registred!</MudAlert>
     }
-    else if (!string.IsNullOrEmpty(ErrorMessage))
+    else if (!string.IsNullOrEmpty(errorMessage))
     {
-        <MudAlert Severity="Severity.Error">@ErrorMessage</MudAlert>
+        <MudAlert Severity="Severity.Error">@errorMessage</MudAlert>
     }
 
     <div style="display: flex; flex-direction: column; gap: 1rem; max-width: 400px;">
@@ -60,7 +60,7 @@
 
 @code {
     private UserDto registerModel = new();
-    private string ErrorMessage = "";
+    private string errorMessage = "";
     private ValidationMessageStore messageStore;
     private EditContext editContext;
 
@@ -73,7 +73,7 @@
 
         editContext.OnValidationStateChanged += (sender, eventArgs) =>
         {
-            ErrorMessage = GetErrorMessage();
+            errorMessage = GetErrorMessage();
             StateHasChanged();
         };
     }
@@ -88,7 +88,7 @@
     {
         if (!editContext.Validate())
         {
-            ErrorMessage = GetErrorMessage();
+            errorMessage = GetErrorMessage();
             return;
         }
 
@@ -103,7 +103,7 @@
         }
         else
         {
-            ErrorMessage = await response.Content.ReadAsStringAsync();
+            errorMessage = await response.Content.ReadAsStringAsync();
         }
     }
 }

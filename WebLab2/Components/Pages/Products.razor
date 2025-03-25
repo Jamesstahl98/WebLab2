@@ -54,6 +54,10 @@
             {
                 <MudAlert Severity="Severity.Info">Your cart is empty.</MudAlert>
             }
+            else if (!string.IsNullOrEmpty(errorMessage))
+            {
+                <MudAlert Severity="Severity.Error">@errorMessage</MudAlert>
+            }
             <MudButton OnClick="PurchaseItems" Disabled="!cart.Any()">Purchase</MudButton>
         </MudPaper>
     </MudItem>
@@ -66,7 +70,9 @@
     private List<ProductDto> filteredProducts = new();
     private List<CategoryDto> categories = new();
     private List<ProductDto> cart = new();
+
     private string? searchInput = "";
+    private string errorMessage = "";
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -132,10 +138,12 @@
     }
     private async Task PurchaseItems()
     {
+        errorMessage = "";
         var userId = await GetUserIdAsync();
         if (userId == null)
         {
-            Console.WriteLine("Failed to retrieve user ID.");
+            errorMessage = "Please log in to purchase items.";
+            StateHasChanged();
             return;
         }
         foreach (var item in cart.ToList())
@@ -156,9 +164,10 @@
             }
             else
             {
-                Console.WriteLine("Purchase failed.");
+                errorMessage = "Failed to purchase items.";
             }
         }
+        StateHasChanged();
     }
 
     private async Task<Guid?> GetUserIdAsync()
