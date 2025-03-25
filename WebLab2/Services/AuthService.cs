@@ -44,6 +44,12 @@ public class AuthService(IUnitOfWork unitOfWork, IConfiguration configuration) :
 
         user.Username = request.Username;
         user.PasswordHash = hashedPassword;
+        user.Email = request.Email;
+        user.Country = request.Country;
+        user.City = request.City;
+        user.Address = request.Address;
+        user.FirstName = request.FirstName;
+        user.LastName = request.LastName;
 
         await _unitOfWork.Users.AddAsync(user);
         await _unitOfWork.SaveChangesAsync();

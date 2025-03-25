@@ -15,15 +15,17 @@
 
 <EditForm Model="loginModel" OnValidSubmit="HandleLogin">
     <DataAnnotationsValidator />
-    <div>
-        <label>Username:</label>
-        <InputText @bind-Value="loginModel.Username" />
+    <div style="display: flex; flex-direction: column; gap: 1rem; max-width: 400px;">
+        <div style="display: flex; align-items: center;">
+            <label style="width: 120px;">Username:</label>
+            <InputText @bind-Value="loginModel.Username" style="flex: 1;" />
     </div>
-    <div>
-        <label>Password:</label>
-        <InputText @bind-Value="loginModel.Password" type="password" />
+        <div style="display: flex; align-items: center;">
+            <label style="width: 120px;">Password:</label>
+            <InputText @bind-Value="loginModel.Password" type="password" style="flex: 1;" />
     </div>
     <button type="submit">Login</button>
+    </div>
 </EditForm>
 
 @code {
