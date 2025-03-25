@@ -61,6 +61,10 @@ namespace WebLab2.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ProductId");
+
+                    b.HasIndex("UserId");
+
                     b.ToTable("Orders");
                 });
 
@@ -151,6 +155,25 @@ namespace WebLab2.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("WebLab2.Entities.Order", b =>
+                {
+                    b.HasOne("WebLab2.Entities.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("WebLab2.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Product");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("WebLab2.Entities.Product", b =>

@@ -12,8 +12,8 @@ using WebLab2.Data;
 namespace WebLab2.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250321103401_AddOrders")]
-    partial class AddOrders
+    [Migration("20250325122835_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -63,6 +63,10 @@ namespace WebLab2.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ProductId");
+
+                    b.HasIndex("UserId");
 
                     b.ToTable("Orders");
                 });
@@ -154,6 +158,25 @@ namespace WebLab2.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("WebLab2.Entities.Order", b =>
+                {
+                    b.HasOne("WebLab2.Entities.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("WebLab2.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Product");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("WebLab2.Entities.Product", b =>

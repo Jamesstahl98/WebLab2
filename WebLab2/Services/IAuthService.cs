@@ -7,6 +7,6 @@ namespace WebLab2.Services;
 public interface IAuthService
 {
     Task<User?> RegisterAsync(UserDto request);
-    Task<TokenResponseDto?> LoginAsync(UserDto request);
+    Task<TokenResponseDto?> LoginAsync(LoginDto request);
     Task<TokenResponseDto?> RefreshTokensAsync(RefreshTokenRequestDto request);
 }

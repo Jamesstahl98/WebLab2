@@ -14,7 +14,7 @@ public class AuthService(IUnitOfWork unitOfWork, IConfiguration configuration) :
     private readonly IUnitOfWork _unitOfWork = unitOfWork;
     private readonly IConfiguration _configuration = configuration;
 
-    public async Task<TokenResponseDto?> LoginAsync(UserDto request)
+    public async Task<TokenResponseDto?> LoginAsync(LoginDto request)
     {
         var user = await _unitOfWork.Users.GetByUsernameAsync(request.Username);
         if (user is null)

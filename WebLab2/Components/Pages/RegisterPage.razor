@@ -5,13 +5,17 @@
 
 <PageTitle>Register</PageTitle>
 
-@if (!string.IsNullOrEmpty(ErrorMessage))
-{
-    <p style="color: red">@ErrorMessage</p>
-}
-
-<EditForm Model="registerModel" OnValidSubmit="RegisterUser">
+<EditForm EditContext="editContext" OnValidSubmit="RegisterUser">
     <DataAnnotationsValidator />
+    @if(isSuccess)
+    {
+        <MudAlert Severity="Severity.Success">User registred!</MudAlert>
+    }
+    else if (!string.IsNullOrEmpty(ErrorMessage))
+    {
+        <MudAlert Severity="Severity.Error">@ErrorMessage</MudAlert>
+    }
+
     <div style="display: flex; flex-direction: column; gap: 1rem; max-width: 400px;">
         <div style="display: flex; align-items: center;">
             <label style="width: 120px;">Username:</label>
@@ -49,6 +53,7 @@
             <label style="width: 120px;">Password:</label>
             <InputText @bind-Value="registerModel.Password" type="password" style="flex: 1;" />
         </div>
+
         <button type="submit" style="margin-top: 1rem;">Register</button>
     </div>
 </EditForm>
@@ -56,16 +61,43 @@
 @code {
     private UserDto registerModel = new();
     private string ErrorMessage = "";
+    private ValidationMessageStore messageStore;
+    private EditContext editContext;
+
+    private bool isSuccess = false;
+
+    protected override void OnInitialized()
+    {
+        editContext = new EditContext(registerModel);
+        messageStore = new ValidationMessageStore(editContext);
+
+        editContext.OnValidationStateChanged += (sender, eventArgs) =>
+        {
+            ErrorMessage = GetErrorMessage();
+            StateHasChanged();
+        };
+    }
+
+    private string GetErrorMessage()
+    {
+        var validationMessages = editContext.GetValidationMessages();
+        return validationMessages.FirstOrDefault();
+    }
 
     private async Task RegisterUser()
     {
-        ErrorMessage = "";
+        if (!editContext.Validate())
+        {
+            ErrorMessage = GetErrorMessage();
+            return;
+        }
 
         var response = await Http.PostAsJsonAsync($"{Navigation.BaseUri}api/auth/register", registerModel);
 
         if (response.IsSuccessStatusCode)
         {
-            ErrorMessage = "Registration successful! Redirecting to login...";
+            isSuccess = true;
+            StateHasChanged();
             await Task.Delay(2000);
             Navigation.NavigateTo("/login");
         }

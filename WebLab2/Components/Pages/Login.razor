@@ -30,7 +30,7 @@
 
 @code {
     [Inject] private AuthHelper AuthHelper { get; set; }
-    private UserDto loginModel = new();
+    private LoginDto loginModel = new();
     private string ErrorMessage = "";
 
     private async Task HandleLogin()
