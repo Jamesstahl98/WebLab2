@@ -102,7 +102,7 @@ public class ProductController : ControllerBase
             if (!success)
                 return NotFound($"Product with ID '{id}' not found");
 
-            return Ok();
+            return StatusCode(204);
         }
         catch (Exception)
         {

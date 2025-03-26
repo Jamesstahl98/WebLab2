@@ -24,7 +24,7 @@ public class OrderController : ControllerBase
         try
         {
             var createdOrder = await _orderService.CreateOrderAsync(orderDto);
-            return Ok(new { message = "Purchase successful", orderId = createdOrder.Id });
+            return StatusCode(201, new { message = "Purchase successful", orderId = createdOrder.Id });
         }
         catch (Exception ex)
         {

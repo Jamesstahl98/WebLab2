@@ -22,7 +22,7 @@ public class AuthController(IAuthService authService) : ControllerBase
             return BadRequest("Username already exists");
         }
 
-        return Ok(user);
+        return StatusCode(201, user);
     }
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginDto request)
