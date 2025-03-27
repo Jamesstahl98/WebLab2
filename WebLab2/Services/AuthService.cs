@@ -36,7 +36,12 @@ public class AuthService(IUnitOfWork unitOfWork, IConfiguration configuration) :
     {
         if (await _unitOfWork.Users.UsernameExistsAsync(request.Username))
         {
-            return null;
+            throw new ArgumentException("Username already registered. Try another.");
+        }
+
+        if (await _unitOfWork.Users.EmailExistsAsync(request.Email))
+        {
+            throw new ArgumentException("Email already registered. Try another.");
         }
 
         var user = new User();

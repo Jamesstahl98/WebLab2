@@ -16,13 +16,19 @@ public class AuthController(IAuthService authService) : ControllerBase
     [HttpPost("register")]
     public async Task<ActionResult<User>> Register(UserDto request)
     {
-        var user = await authService.RegisterAsync(request);
-        if (user is null)
+        try
         {
-            return BadRequest("Username already exists");
+            var user = await authService.RegisterAsync(request);
+            return StatusCode(201, user);
         }
-
-        return StatusCode(201, user);
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { error = "An unexpected error occurred.", details = ex.Message });
+        }
     }
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginDto request)

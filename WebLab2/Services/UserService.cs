@@ -56,8 +56,13 @@ public class UserService : IUserService
 
         if (!string.Equals(user.Username, updatedUser.Username, StringComparison.OrdinalIgnoreCase))
         {
-            var usernameExists = await UsernameExistsAsync(updatedUser.Username);
+            var usernameExists = await _unitOfWork.Users.UsernameExistsAsync(updatedUser.Username);
             if (usernameExists)
+            {
+                return null;
+            }
+            var emailExists = await _unitOfWork.Users.EmailExistsAsync(updatedUser.Email);
+            if (emailExists)
             {
                 return null;
             }
@@ -92,10 +97,5 @@ public class UserService : IUserService
             City = user.City,
             Address = user.Address
         };
-    }
-
-    public async Task<bool> UsernameExistsAsync(string username)
-    {
-        return await _unitOfWork.Users.UsernameExistsAsync(username);
     }
 }
