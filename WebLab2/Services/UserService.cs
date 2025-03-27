@@ -59,12 +59,16 @@ public class UserService : IUserService
             var usernameExists = await _unitOfWork.Users.UsernameExistsAsync(updatedUser.Username);
             if (usernameExists)
             {
-                return null;
+                throw new ArgumentException("Username already exists.");
             }
+        }
+
+        if (!string.Equals(user.Email, updatedUser.Email, StringComparison.OrdinalIgnoreCase))
+        {
             var emailExists = await _unitOfWork.Users.EmailExistsAsync(updatedUser.Email);
             if (emailExists)
             {
-                return null;
+                throw new ArgumentException("Email already exists.");
             }
         }
 

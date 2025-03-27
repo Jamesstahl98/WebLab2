@@ -16,7 +16,7 @@
         <MudTextField @bind-Value="user.Address" Label="Address" Required="true" Variant="Variant.Outlined" />
         <MudTextField @bind-Value="user.Password" Label="Password" Variant="Variant.Outlined"
         InputType="@PasswordInput" Adornment="Adornment.End" AdornmentIcon="@PasswordInputIcon"
-                      OnAdornmentClick="ShowPassword" AdornmentAriaLabel="Show Password" Required="true" />
+        OnAdornmentClick="ShowPassword" AdornmentAriaLabel="Show Password" Required="true" />
 
         <MudButton OnClick="SaveChanges" Color="Color.Primary">Save Changes</MudButton>
     </MudForm>
@@ -27,7 +27,7 @@
     }
     @if (isError)
     {
-        <MudAlert Severity="Severity.Error">Failed to update profile.</MudAlert>
+        <MudAlert Severity="Severity.Error">@errorMessage</MudAlert>
     }
 </MudPaper>
 
@@ -103,7 +103,7 @@
         else
         {
             isError = true;
-            errorMessage = "Failed to update profile.";
+            errorMessage = await response.Content.ReadAsStringAsync();
         }
     }
 

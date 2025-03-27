@@ -52,12 +52,18 @@ public class UsersController : Controller
             return Unauthorized("Invalid user ID");
         }
 
-        var updatedUserDto = await _userService.UpdateUserProfileAsync(userId, updatedUser);
-        if (updatedUserDto == null)
+        try
         {
-            return BadRequest("Username already exists or user not found.");
+            var updatedUserDto = await _userService.UpdateUserProfileAsync(userId, updatedUser);
+            return Ok(updatedUserDto);
         }
-
-        return Ok(updatedUserDto);
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { error = "An unexpected error occurred.", details = ex.Message });
+        }
     }
 }
