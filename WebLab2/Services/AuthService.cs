@@ -50,6 +50,7 @@ public class AuthService(IUnitOfWork unitOfWork, IConfiguration configuration) :
         user.Username = request.Username;
         user.PasswordHash = hashedPassword;
         user.Email = request.Email;
+        user.PhoneNumber = request.PhoneNumber;
         user.Country = request.Country;
         user.City = request.City;
         user.Address = request.Address;
