@@ -44,7 +44,7 @@ public class UsersController : Controller
     }
 
     [HttpPut("update-profile")]
-    public async Task<IActionResult> UpdateUserProfile([FromBody] UserDto updatedUser)
+    public async Task<IActionResult> UpdateUserProfile([FromBody] UpdateUserDto updatedUser)
     {
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (!Guid.TryParse(userIdClaim, out var userId))

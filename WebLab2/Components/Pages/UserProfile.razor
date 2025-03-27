@@ -14,9 +14,14 @@
         <MudTextField @bind-Value="user.Country" Label="Country" Required="true" Variant="Variant.Outlined" />
         <MudTextField @bind-Value="user.City" Label="City" Required="true" Variant="Variant.Outlined" />
         <MudTextField @bind-Value="user.Address" Label="Address" Required="true" Variant="Variant.Outlined" />
-        <MudTextField @bind-Value="user.Password" Label="Password" Variant="Variant.Outlined"
-        InputType="@PasswordInput" Adornment="Adornment.End" AdornmentIcon="@PasswordInputIcon"
-        OnAdornmentClick="ShowPassword" AdornmentAriaLabel="Show Password" Required="true" />
+
+        <MudTextField @bind-Value="user.CurrentPassword" Label="Current Password" Variant="Variant.Outlined"
+                      InputType="@PasswordInput" Adornment="Adornment.End" AdornmentIcon="@PasswordInputIcon"
+                      OnAdornmentClick="ShowPassword" AdornmentAriaLabel="Show Password" Required="true" />
+
+        <MudTextField @bind-Value="user.NewPassword" Label="New Password (Leave blank to keep current password)" Variant="Variant.Outlined"
+                      InputType="@PasswordInput" Adornment="Adornment.End" AdornmentIcon="@PasswordInputIcon"
+                      OnAdornmentClick="ShowPassword" AdornmentAriaLabel="Show Password" />
 
         <MudButton OnClick="SaveChanges" Color="Color.Primary">Save Changes</MudButton>
     </MudForm>
@@ -34,7 +39,7 @@
 @code {
     [Inject] private AuthHelper AuthHelper { get; set; }
 
-    private UserDto user = new UserDto();
+    private UpdateUserDto user = new UpdateUserDto();
     private bool isSuccess = false;
     private bool isError = false;
     private bool isAuthenticated = false;
@@ -57,7 +62,7 @@
                 var response = await Http.SendAsync(requestMessage);
                 if (response.IsSuccessStatusCode)
                 {
-                    user = await response.Content.ReadFromJsonAsync<UserDto>();
+                    user = await response.Content.ReadFromJsonAsync<UpdateUserDto>();
                     isAuthenticated = true;
                 }
                 else
