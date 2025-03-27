@@ -53,7 +53,7 @@ public class CategoryController : ControllerBase
         if (!isDeleted)
             return NotFound($"Category with Id {id} not found");
 
-        return Ok();
+        return StatusCode(204);
     }
 
     [Authorize(Roles = "Admin")]
