@@ -49,22 +49,34 @@ public class UserService : IUserService
         };
     }
 
-    public async Task<UserDto> UpdateUserProfileAsync(Guid userId, UserDto updatedUser)
+    public async Task<UserDto> UpdateUserProfileAsync(Guid userId, UpdateUserDto updatedUser)
     {
         var user = await _unitOfWork.Users.GetByIdAsync(userId);
         if (user == null) return null;
+
+        var passwordHasher = new PasswordHasher<User>();
+        var passwordVerification = passwordHasher.VerifyHashedPassword(user, user.PasswordHash, updatedUser.CurrentPassword);
+
+        if (passwordVerification != PasswordVerificationResult.Success)
+        {
+            throw new ArgumentException("Incorrect password.");
+        }
 
         if (!string.Equals(user.Username, updatedUser.Username, StringComparison.OrdinalIgnoreCase))
         {
             var usernameExists = await _unitOfWork.Users.UsernameExistsAsync(updatedUser.Username);
             if (usernameExists)
             {
-                return null;
+                throw new ArgumentException("Username already exists.");
             }
+        }
+
+        if (!string.Equals(user.Email, updatedUser.Email, StringComparison.OrdinalIgnoreCase))
+        {
             var emailExists = await _unitOfWork.Users.EmailExistsAsync(updatedUser.Email);
             if (emailExists)
             {
-                return null;
+                throw new ArgumentException("Email already exists.");
             }
         }
 
@@ -77,9 +89,9 @@ public class UserService : IUserService
         user.City = updatedUser.City;
         user.Address = updatedUser.Address;
 
-        if (!string.IsNullOrEmpty(updatedUser.Password))
+        if (!string.IsNullOrEmpty(updatedUser.NewPassword))
         {
-            user.PasswordHash = new PasswordHasher<User>().HashPassword(user, updatedUser.Password);
+            user.PasswordHash = new PasswordHasher<User>().HashPassword(user, updatedUser.NewPassword);
         }
 
         _unitOfWork.Users.Update(user);
