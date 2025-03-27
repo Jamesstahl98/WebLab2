@@ -59,7 +59,7 @@ public class AuthController(IAuthService authService) : ControllerBase
         Response.Cookies.Delete("AccessToken");
         Response.Cookies.Delete("RefreshToken");
 
-        return Ok();
+        return StatusCode(204);
     }
 
     [HttpPost("refresh-token")]
