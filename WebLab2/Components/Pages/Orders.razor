@@ -5,6 +5,7 @@
 @inject NavigationManager Navigation
 
 <PageTitle>Orders</PageTitle>
+
 @if (isAdmin)
 {
     <MudTable Items="@orders" Striped="true" Hover="true">
@@ -12,19 +13,30 @@
             <MudTh>Order Id</MudTh>
             <MudTh>User Id</MudTh>
             <MudTh>User Email</MudTh>
-            <MudTh>Product Id</MudTh>
-            <MudTh>Product Name</MudTh>
-            <MudTh>Quantity</MudTh>
             <MudTh>Time Placed</MudTh>
+            <MudTh>Products</MudTh>
         </HeaderContent>
         <RowTemplate>
             <MudTd DataLabel="Order Id">@context.Id</MudTd>
             <MudTd DataLabel="User Id">@context.UserId</MudTd>
             <MudTd DataLabel="User Email">@context.UserEmail</MudTd>
-            <MudTd DataLabel="Product Id">@context.ProductId</MudTd>
-            <MudTd DataLabel="Product Name">@context.ProductName</MudTd>
-            <MudTd DataLabel="Quantity">@context.Quantity</MudTd>
             <MudTd DataLabel="Time Placed">@context.CreatedDate</MudTd>
+            <MudTd>
+                <MudAccordion Elevation="0">
+                    <MudExpansionPanel Text="View Order Items">
+                        <MudList T="OrderItemDto">
+                            @foreach (var item in context.OrderItems)
+                            {
+                                <MudListItem>
+                                    <MudText>
+                                        <strong>@item.ProductName</strong> - @item.Quantity x @item.ProductUnitPrice.ToString("C")
+                                    </MudText>
+                                </MudListItem>
+                            }
+                        </MudList>
+                    </MudExpansionPanel>
+                </MudAccordion>
+            </MudTd>
         </RowTemplate>
     </MudTable>
 }
@@ -32,6 +44,7 @@ else
 {
     <a href="/login">Login as an admin to view users.</a>
 }
+
 @code {
     [Inject] private AuthHelper AuthHelper { get; set; }
     private bool isAdmin;

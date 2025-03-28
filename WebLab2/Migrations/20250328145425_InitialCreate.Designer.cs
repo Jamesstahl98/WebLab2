@@ -12,8 +12,8 @@ using WebLab2.Data;
 namespace WebLab2.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250328125326_AddConstraints")]
-    partial class AddConstraints
+    [Migration("20250328145425_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

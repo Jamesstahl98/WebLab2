@@ -10,24 +10,28 @@ namespace WebLab2.Services;
 public class OrderService : IOrderService
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IOrderItemService _orderItemService;
 
-    public OrderService(IUnitOfWork unitOfWork)
+    public OrderService(IUnitOfWork unitOfWork, IOrderItemService orderItemService)
     {
         _unitOfWork = unitOfWork;
+        _orderItemService = orderItemService;
     }
 
     public async Task<Order> CreateOrderAsync(OrderDto orderDto)
     {
-        if (orderDto.Quantity <= 0)
-            throw new ArgumentException("Invalid order quantity.");
+        if (orderDto.OrderItems == null || !orderDto.OrderItems.Any())
+            throw new ArgumentException("Order must contain at least one item.");
 
         var order = new Order
         {
-            ProductId = orderDto.ProductId,
-            Quantity = orderDto.Quantity,
             UserId = orderDto.UserId,
-            Date = orderDto.CreatedDate
+            Status = "Pending",
+            CreatedDate = DateTime.UtcNow,
+            OrderItems = new List<OrderItem>()
         };
+
+        await _orderItemService.AddOrderItemsAsync(order, orderDto.OrderItems);
 
         await _unitOfWork.Orders.AddAsync(order);
         await _unitOfWork.SaveChangesAsync();

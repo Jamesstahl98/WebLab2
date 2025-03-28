@@ -45,6 +45,7 @@ namespace WebLab2.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Users", x => x.Id);
+                    table.CheckConstraint("CK_User_Email", "[Email] LIKE '%@%.%'");
                 });
 
             migrationBuilder.CreateTable(
@@ -62,6 +63,7 @@ namespace WebLab2.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Products", x => x.Id);
+                    table.CheckConstraint("CK_Product_Price", "[Price] >= 0.01 AND [Price] <= 10000");
                     table.ForeignKey(
                         name: "FK_Products_Categories_CategoryId",
                         column: x => x.CategoryId,

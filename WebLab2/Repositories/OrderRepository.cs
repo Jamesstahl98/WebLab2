@@ -23,36 +23,32 @@ public class OrderRepository : IOrderRepository
 
     public async Task<Order?> GetByIdAsync(int id)
     {
-        return await _context.Orders.FindAsync(id);
+        return await _context.Orders
+            .Include(o => o.OrderItems)
+            .ThenInclude(oi => oi.Product)
+            .FirstOrDefaultAsync(o => o.Id == id);
     }
+
     public async Task<IEnumerable<OrderDto>> GetAllAsync()
     {
         var orders = await _context.Orders
-            .Join(_context.Users,
-                order => order.UserId,
-                user => user.Id,
-                (order, user) => new
+            .Include(o => o.OrderItems)
+            .ThenInclude(oi => oi.Product)
+            .Include(o => o.User)
+            .Select(o => new OrderDto
+            {
+                Id = o.Id,
+                UserId = o.UserId,
+                UserEmail = o.User.Email,
+                CreatedDate = o.CreatedDate,
+                OrderItems = o.OrderItems.Select(oi => new OrderItemDto
                 {
-                    order.Id,
-                    order.UserId,
-                    UserEmail = user.Email,
-                    order.ProductId,
-                    order.Quantity,
-                    order.Date
-                })
-            .Join(_context.Products,
-                order => order.ProductId,
-                product => product.Id,
-                (order, product) => new OrderDto
-                {
-                    Id = order.Id,
-                    UserId = order.UserId,
-                    UserEmail = order.UserEmail,
-                    ProductId = order.ProductId,
-                    ProductName = product.Name,
-                    Quantity = order.Quantity,
-                    CreatedDate = order.Date
-                })
+                    ProductId = oi.ProductId,
+                    ProductName = oi.Product.Name,
+                    Quantity = oi.Quantity,
+                    ProductUnitPrice = oi.ProductUnitPrice
+                }).ToList()
+            })
             .ToListAsync();
 
         return orders;
