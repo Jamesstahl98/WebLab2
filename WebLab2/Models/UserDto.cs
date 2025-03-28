@@ -12,6 +12,7 @@ public class UserDto
     [Required(ErrorMessage = "Last name is required.")]
     public string LastName { get; set; } = string.Empty;
     [Required(ErrorMessage = "Email is required.")]
+    [RegularExpression(@"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$", ErrorMessage = "Invalid email format.")]
     public string Email { get; set; } = string.Empty;
     [Required(ErrorMessage = "Phone number is required.")]
     public string? PhoneNumber { get; set; } = string.Empty;
