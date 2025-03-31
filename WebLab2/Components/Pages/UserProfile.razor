@@ -23,7 +23,7 @@
                       InputType="@PasswordInput" Adornment="Adornment.End" AdornmentIcon="@PasswordInputIcon"
                       OnAdornmentClick="ShowPassword" AdornmentAriaLabel="Show Password" />
 
-        <MudButton OnClick="SaveChanges" Color="Color.Primary">Save Changes</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveChanges">Save Changes</MudButton>
     </MudForm>
 
     @if (isSuccess)

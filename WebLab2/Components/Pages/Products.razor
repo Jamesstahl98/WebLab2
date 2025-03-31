@@ -27,7 +27,7 @@
                     <MudTd DataLabel="Category">@GetCategoryName(@context.CategoryId)</MudTd>
                     <MudTd DataLabel="Status">@context.Status</MudTd>
                     <MudTd>
-                        <MudButton OnClick="() => AddToCart(context)" Color="Color.Primary">Add to Cart</MudButton>
+                        <MudButton Variant="Variant.Outlined" OnClick="() => AddToCart(context)" Color="Color.Primary">Add to Cart</MudButton>
                     </MudTd>
                 </RowTemplate>
             </MudTable>
@@ -46,8 +46,8 @@
                 {
                     <MudListItem T="ProductDto">
                         <MudText>@item.Key.Name - @item.Key.Price.ToString("C") x @item.Value</MudText>
-                        <MudIconButton Icon="@Icons.Material.Filled.Add" Color="Color.Secondary" OnClick="() => IncreaseQuantity(item.Key)" />
-                        <MudIconButton Icon="@Icons.Material.Filled.Remove" Color="Color.Secondary" OnClick="() => DecreaseQuantity(item.Key)" />
+                        <MudIconButton Icon="@Icons.Material.Filled.Add" Color="Color.Primary" OnClick="() => IncreaseQuantity(item.Key)" />
+                        <MudIconButton Icon="@Icons.Material.Filled.Remove" Color="Color.Primary" OnClick="() => DecreaseQuantity(item.Key)" />
                         <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="() => RemoveFromCart(item.Key)" />
                     </MudListItem>
                 }
@@ -60,7 +60,7 @@
             {
                 <MudAlert Severity="Severity.Error">@errorMessage</MudAlert>
             }
-            <MudButton OnClick="PurchaseItems" Disabled="!cart.Any()">Purchase</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="PurchaseItems" Disabled="!cart.Any()">Purchase</MudButton>
         </MudPaper>
     </MudItem>
 </MudGrid>

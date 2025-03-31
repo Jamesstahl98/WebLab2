@@ -19,42 +19,42 @@
     <div style="display: flex; flex-direction: column; gap: 1rem; max-width: 400px;">
         <div style="display: flex; align-items: center;">
             <label style="width: 120px;">Username:</label>
-            <InputText @bind-Value="registerModel.Username" style="flex: 1;" />
+            <InputText class="border" @bind-Value="registerModel.Username" style="flex: 1;" />
         </div>
         <div style="display: flex; align-items: center;">
             <label style="width: 120px;">First Name:</label>
-            <InputText @bind-Value="registerModel.FirstName" style="flex: 1;" />
+            <InputText class="border" @bind-Value="registerModel.FirstName" style="flex: 1;" />
         </div>
         <div style="display: flex; align-items: center;">
             <label style="width: 120px;">Last Name:</label>
-            <InputText @bind-Value="registerModel.LastName" style="flex: 1;" />
+            <InputText class="border" @bind-Value="registerModel.LastName" style="flex: 1;" />
         </div>
         <div style="display: flex; align-items: center;">
             <label style="width: 120px;">Email:</label>
-            <InputText @bind-Value="registerModel.Email" style="flex: 1;" />
+            <InputText class="border" @bind-Value="registerModel.Email" style="flex: 1;" />
         </div>
         <div style="display: flex; align-items: center;">
             <label style="width: 120px;">Phone Number:</label>
-            <InputText @bind-Value="registerModel.PhoneNumber" style="flex: 1;" />
+            <InputText class="border" @bind-Value="registerModel.PhoneNumber" style="flex: 1;" />
         </div>
         <div style="display: flex; align-items: center;">
             <label style="width: 120px;">Country:</label>
-            <InputText @bind-Value="registerModel.Country" style="flex: 1;" />
+            <InputText class="border" @bind-Value="registerModel.Country" style="flex: 1;" />
         </div>
         <div style="display: flex; align-items: center;">
             <label style="width: 120px;">City:</label>
-            <InputText @bind-Value="registerModel.City" style="flex: 1;" />
+            <InputText class="border" @bind-Value="registerModel.City" style="flex: 1;" />
         </div>
         <div style="display: flex; align-items: center;">
             <label style="width: 120px;">Address:</label>
-            <InputText @bind-Value="registerModel.Address" style="flex: 1;" />
+            <InputText class="border" @bind-Value="registerModel.Address" style="flex: 1;" />
         </div>
         <div style="display: flex; align-items: center;">
             <label style="width: 120px;">Password:</label>
-            <InputText @bind-Value="registerModel.Password" type="password" style="flex: 1;" />
+            <InputText class="border" @bind-Value="registerModel.Password" type="password" style="flex: 1;" />
         </div>
 
-        <button type="submit" style="margin-top: 1rem;">Register</button>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="RegisterUser">Register</MudButton>
     </div>
 </EditForm>
 
