@@ -1,9 +1,11 @@
 ﻿@page "/products"
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
 @using WebLab2.Entities
 @using WebLab2.HelperMethods
 @using WebLab2.Models
 @inject HttpClient Http
 @inject NavigationManager Navigation
+@inject ProtectedSessionStorage ProtectedSessionStore
 @rendermode InteractiveServer
 
 <PageTitle>Products</PageTitle>
@@ -44,12 +46,16 @@
             <MudList T="ProductDto">
                 @foreach (var item in cart)
                 {
-                    <MudListItem T="ProductDto">
-                        <MudText>@item.Key.Name - @item.Key.Price.ToString("C") x @item.Value</MudText>
-                        <MudIconButton Icon="@Icons.Material.Filled.Add" Color="Color.Primary" OnClick="() => AddToCart(item.Key)" />
-                        <MudIconButton Icon="@Icons.Material.Filled.Remove" Color="Color.Primary" OnClick="() => DecreaseQuantity(item.Key)" />
-                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="() => RemoveFromCart(item.Key)" />
-                    </MudListItem>
+                    var product = products.FirstOrDefault(p => p.Id == item.Key);
+                    if (product != null)
+                    {
+                        <MudListItem T="ProductDto">
+                            <MudText>@product.Name - @product.Price.ToString("C") x @item.Value</MudText>
+                            <MudIconButton Icon="@Icons.Material.Filled.Add" Color="Color.Primary" OnClick="() => AddToCart(product)" />
+                            <MudIconButton Icon="@Icons.Material.Filled.Remove" Color="Color.Primary" OnClick="() => DecreaseQuantity(product)" />
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="() => RemoveFromCart(product)" />
+                        </MudListItem>
+                    }
                 }
             </MudList>
             @if (!cart.Any())
@@ -79,7 +85,7 @@
     private List<ProductDto> products = new();
     private List<ProductDto> filteredProducts = new();
     private List<CategoryDto> categories = new();
-    private Dictionary<ProductDto, int> cart = new();
+    private Dictionary<int, int> cart = new();
     private string? searchInput = "";
     private string errorMessage = "";
 
@@ -87,10 +93,17 @@
     {
         if (firstRender)
         {
+            cart = await GetShoppingCart();
             await RefreshCategories();
             await RefreshProducts();
             StateHasChanged();
         }
+    }
+
+    private async Task<Dictionary<int, int>> GetShoppingCart()
+    {
+        var result = await ProtectedSessionStore.GetAsync<Dictionary<int, int>>("cart");
+        return result.Success ? result.Value : new Dictionary<int, int>();
     }
 
     private async Task RefreshCategories()
@@ -138,36 +151,39 @@
         }
     }
 
-    private void AddToCart(ProductDto product)
+    private async Task AddToCart(ProductDto product)
     {
-        if (cart.ContainsKey(product))
+        if (cart.ContainsKey(product.Id))
         {
-            cart[product]++;
+            cart[product.Id]++;
         }
         else
         {
-            cart[product] = 1;
+            cart[product.Id] = 1;
         }
+        await ProtectedSessionStore.SetAsync("cart", cart);
     }
 
-    private void DecreaseQuantity(ProductDto product)
+    private async Task DecreaseQuantity(ProductDto product)
     {
-        if (cart.ContainsKey(product))
+        if (cart.ContainsKey(product.Id))
         {
-            if (cart[product] > 1)
+            if (cart[product.Id] > 1)
             {
-                cart[product]--;
+                cart[product.Id]--;
             }
             else
             {
-                cart.Remove(product);
+                cart.Remove(product.Id);
             }
+            await ProtectedSessionStore.SetAsync("cart", cart);
         }
     }
 
-    private void RemoveFromCart(ProductDto product)
+    private async Task RemoveFromCart(ProductDto product)
     {
-        cart.Remove(product);
+        cart.Remove(product.Id);
+        await ProtectedSessionStore.SetAsync("cart", cart);
     }
 
     private async Task PurchaseItems()
@@ -182,18 +198,27 @@
         }
 
         var orderDto = new OrderDto
-        {
-            UserId = userId.Value,
-            CreatedDate = DateTime.Now,
-            UserEmail = "",
-            OrderItems = cart.Select(kvp => new OrderItemDto
             {
-                ProductId = kvp.Key.Id,
-                ProductName = kvp.Key.Name,
-                Quantity = kvp.Value,
-                ProductUnitPrice = kvp.Key.Price
-            }).ToList()
-        };
+                UserId = userId.Value,
+                CreatedDate = DateTime.UtcNow,
+                UserEmail = string.Empty,
+                OrderItems = cart
+            .Select(kvp =>
+            {
+                var product = products.FirstOrDefault(p => p.Id == kvp.Key);
+                return product != null
+                    ? new OrderItemDto
+                    {
+                        ProductId = product.Id,
+                        ProductName = product.Name,
+                        Quantity = kvp.Value,
+                        ProductUnitPrice = product.Price
+                    }
+                    : null;
+            })
+            .Where(item => item != null)
+            .ToList()
+            };
 
         var response = await Http.PostAsJsonAsync($"{Navigation.BaseUri}api/orders/purchase", orderDto);
 
