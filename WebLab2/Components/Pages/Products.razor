@@ -46,7 +46,7 @@
                 {
                     <MudListItem T="ProductDto">
                         <MudText>@item.Key.Name - @item.Key.Price.ToString("C") x @item.Value</MudText>
-                        <MudIconButton Icon="@Icons.Material.Filled.Add" Color="Color.Primary" OnClick="() => IncreaseQuantity(item.Key)" />
+                        <MudIconButton Icon="@Icons.Material.Filled.Add" Color="Color.Primary" OnClick="() => AddToCart(item.Key)" />
                         <MudIconButton Icon="@Icons.Material.Filled.Remove" Color="Color.Primary" OnClick="() => DecreaseQuantity(item.Key)" />
                         <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="() => RemoveFromCart(item.Key)" />
                     </MudListItem>
@@ -58,7 +58,16 @@
             }
             else if (!string.IsNullOrEmpty(errorMessage))
             {
-                <MudAlert Severity="Severity.Error">@errorMessage</MudAlert>
+                <MudAlert Severity="Severity.Error">
+                    @if (errorMessage == "Please log in to purchase items.")
+                    {
+                        <span>Please <a href="/login">log in</a> to purchase items.</span>
+                    }
+                    else
+                    {
+                        @errorMessage
+                    }
+                </MudAlert>
             }
             <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="PurchaseItems" Disabled="!cart.Any()">Purchase</MudButton>
         </MudPaper>
@@ -138,14 +147,6 @@
         else
         {
             cart[product] = 1;
-        }
-    }
-
-    private void IncreaseQuantity(ProductDto product)
-    {
-        if (cart.ContainsKey(product))
-        {
-            cart[product]++;
         }
     }
 
