@@ -14,7 +14,7 @@
     @if(isAdmin)
     {
         //PRODUCT LIST
-        <MudCardHeader>Products</MudCardHeader>
+        <MudCardHeader Style="font-size: 2.5rem">Products</MudCardHeader>
         <MudTable Items="@products" Striped="true" Hover="true">
             <HeaderContent>
                 <MudTh>Product Name</MudTh>
@@ -38,10 +38,12 @@
                 </MudButton>
             </RowTemplate>
         </MudTable>
-        <MudButton Color="Color.Primary" OnClick="OpenAddProductDialog">Add Product</MudButton>
+        <MudButton Class="mb-5" Color="Color.Primary" OnClick="OpenAddProductDialog">Add Product</MudButton>
+
+        <MudDivider/>
 
         //CATEGORY LIST
-        <MudCardHeader>Categories</MudCardHeader>
+        <MudCardHeader Style="font-size: 2.5rem">Categories</MudCardHeader>
         <MudTable Items="@categories" Striped="true" Hover="true">
             <HeaderContent>
                 <MudTh>Category Name</MudTh>

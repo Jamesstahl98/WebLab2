@@ -19,11 +19,11 @@
         <div style="display: flex; align-items: center;">
             <label style="width: 120px;">Username:</label>
             <InputText class="border" @bind-Value="loginModel.Username" style="flex: 1;" />
-    </div>
+        </div>
         <div style="display: flex; align-items: center;">
             <label style="width: 120px;">Password:</label>
             <InputText class="border" @bind-Value="loginModel.Password" type="password" style="flex: 1;" />
-    </div>
+        </div>
         <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="HandleLogin">Login</MudButton>
     </div>
 </EditForm>
@@ -54,6 +54,7 @@
             }
             AuthHelper.IsAuthenticated = true;
             Navigation.NavigateTo("/");
+            StateHasChanged();
         }
         else
         {
