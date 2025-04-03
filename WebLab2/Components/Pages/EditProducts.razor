@@ -29,7 +29,7 @@
                 <MudTd DataLabel="Category">
                     @GetCategoryName(@context.CategoryId)
                 </MudTd>
-                <MudTd DataLabel="Status">@context.CategoryId.ToString()</MudTd>
+                <MudTd DataLabel="Status">@context.Status</MudTd>
                 <MudButton Color="Color.Secondary" OnClick="@(() => OpenEditProduct(context))">
                     Edit
                 </MudButton>

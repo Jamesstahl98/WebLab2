@@ -15,13 +15,14 @@
         <MudTextField @bind-Value="user.City" Label="City" Required="true" Variant="Variant.Outlined" />
         <MudTextField @bind-Value="user.Address" Label="Address" Required="true" Variant="Variant.Outlined" />
 
-        <MudTextField @bind-Value="user.CurrentPassword" Label="Current Password" Variant="Variant.Outlined"
-                      InputType="@PasswordInput" Adornment="Adornment.End" AdornmentIcon="@PasswordInputIcon"
-                      OnAdornmentClick="ShowPassword" AdornmentAriaLabel="Show Password" Required="true" />
-
         <MudTextField @bind-Value="user.NewPassword" Label="New Password (Leave blank to keep current password)" Variant="Variant.Outlined"
                       InputType="@PasswordInput" Adornment="Adornment.End" AdornmentIcon="@PasswordInputIcon"
                       OnAdornmentClick="ShowPassword" AdornmentAriaLabel="Show Password" />
+
+        <MudTextField @bind-Value="user.CurrentPassword" Label="Current Password" Variant="Variant.Outlined"
+                      InputType="@PasswordInput" Adornment="Adornment.End" AdornmentIcon="@PasswordInputIcon"
+                      OnAdornmentClick="ShowPassword" AdornmentAriaLabel="Show Password" Required="true"
+                      Class="mt-5"/>
 
         <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveChanges">Save Changes</MudButton>
     </MudForm>
