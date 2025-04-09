@@ -49,27 +49,33 @@ else
             isAdmin = await AuthHelper.IsUserAdminAsync();
             if (isAdmin)
             {
-                var token = await AuthHelper.GetAccessTokenAsync();
-
-                if (!string.IsNullOrEmpty(token))
-                {
-                    var requestMessage = new HttpRequestMessage(HttpMethod.Get, $"{Navigation.BaseUri}api/user");
-                    requestMessage.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
-
-                    var response = await Http.SendAsync(requestMessage);
-                    if (response.IsSuccessStatusCode)
-                    {
-                        allUsers = await response.Content.ReadFromJsonAsync<List<UserDto>>();
-                        searchResults = allUsers;
-                    }
-                    else
-                    {
-                        Console.WriteLine("Unauthorized or Forbidden access.");
-                    }
-                }
+                searchResults = await GetUsers();
             }
             StateHasChanged();
         }
+    }
+
+    private async Task<List<UserDto>> GetUsers()
+    {
+        var token = await AuthHelper.GetAccessTokenAsync();
+
+        if (!string.IsNullOrEmpty(token))
+        {
+            var requestMessage = new HttpRequestMessage(HttpMethod.Get, $"{Navigation.BaseUri}api/user");
+            requestMessage.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+            var response = await Http.SendAsync(requestMessage);
+            if (response.IsSuccessStatusCode)
+            {
+                allUsers = await response.Content.ReadFromJsonAsync<List<UserDto>>();
+                return allUsers;
+            }
+            else
+            {
+                return new List<UserDto>();
+            }
+        }
+        return new List<UserDto>();
     }
 
     private void SearchUserByEmail()

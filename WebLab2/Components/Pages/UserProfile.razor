@@ -16,13 +16,13 @@
         <MudTextField @bind-Value="user.Address" Label="Address" Required="true" Variant="Variant.Outlined" />
 
         <MudTextField @bind-Value="user.NewPassword" Label="New Password (Leave blank to keep current password)" Variant="Variant.Outlined"
-                      InputType="@PasswordInput" Adornment="Adornment.End" AdornmentIcon="@PasswordInputIcon"
-                      OnAdornmentClick="ShowPassword" AdornmentAriaLabel="Show Password" />
+        InputType="@PasswordInput" Adornment="Adornment.End" AdornmentIcon="@PasswordInputIcon"
+        OnAdornmentClick="ShowPassword" AdornmentAriaLabel="Show Password" />
 
         <MudTextField @bind-Value="user.CurrentPassword" Label="Current Password" Variant="Variant.Outlined"
-                      InputType="@PasswordInput" Adornment="Adornment.End" AdornmentIcon="@PasswordInputIcon"
-                      OnAdornmentClick="ShowPassword" AdornmentAriaLabel="Show Password" Required="true"
-                      Class="mt-5"/>
+        InputType="@PasswordInput" Adornment="Adornment.End" AdornmentIcon="@PasswordInputIcon"
+        OnAdornmentClick="ShowPassword" AdornmentAriaLabel="Show Password" Required="true"
+        Class="mt-5"/>
 
         <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveChanges">Save Changes</MudButton>
     </MudForm>
@@ -53,34 +53,48 @@
     {
         if (firstRender)
         {
-            var token = await AuthHelper.GetAccessTokenAsync();
+            bool userValidated = await ValidateUser();
 
-            if (!string.IsNullOrEmpty(token))
+            if(userValidated)
             {
-                var requestMessage = new HttpRequestMessage(HttpMethod.Get, $"{Navigation.BaseUri}api/user/get-profile");
-                requestMessage.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
-
-                var response = await Http.SendAsync(requestMessage);
-                if (response.IsSuccessStatusCode)
-                {
-                    user = await response.Content.ReadFromJsonAsync<UpdateUserDto>();
-                    isAuthenticated = true;
-                }
-                else
-                {
-                    isAuthenticated = false;
-                    isError = true;
-                    errorMessage = "Failed to fetch user profile. Please log in.";
-                }
+                isAuthenticated = true;
             }
             else
             {
                 isAuthenticated = false;
-                isError = true;
-                errorMessage = "Unauthorized access. No token found.";
             }
 
             StateHasChanged();
+        }
+    }
+
+    private async Task<bool> ValidateUser()
+    {
+        var token = await AuthHelper.GetAccessTokenAsync();
+
+        if (!string.IsNullOrEmpty(token))
+        {
+            var requestMessage = new HttpRequestMessage(HttpMethod.Get, $"{Navigation.BaseUri}api/user/get-profile");
+            requestMessage.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+            var response = await Http.SendAsync(requestMessage);
+            if (response.IsSuccessStatusCode)
+            {
+                user = await response.Content.ReadFromJsonAsync<UpdateUserDto>();
+                return true;
+            }
+            else
+            {
+                isError = true;
+                errorMessage = "Failed to fetch user profile. Please log in.";
+                return false;
+            }
+        }
+        else
+        {
+            isError = true;
+            errorMessage = "Unauthorized access. No token found.";
+            return false;
         }
     }
 

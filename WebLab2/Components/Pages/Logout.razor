@@ -10,14 +10,17 @@
     [Inject] private AuthHelper AuthHelper { get; set; }
     protected override async Task OnInitializedAsync()
     {
+        await StartLogout();
+        Navigation.NavigateTo($"{Navigation.BaseUri}login");
+    }
+
+    private async Task StartLogout()
+    {
         var response = await Http.PostAsync($"{Navigation.BaseUri}api/auth/logout", null);
         if (response.IsSuccessStatusCode)
         {
             await jsRuntime.InvokeVoidAsync("clearAuthCookies");
             AuthHelper.IsAuthenticated = false;
-            Navigation.NavigateTo("/login");
         }
-        Navigation.NavigateTo($"{Navigation.BaseUri}login");
-        StateHasChanged();
     }
 }
